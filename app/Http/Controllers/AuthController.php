@@ -15,37 +15,31 @@ class AuthController extends Controller
 {
 
     public function login(Request $request) {
-    // 1. Validación de formato (usando tus mensajes de lang/es)
     $request->validate([
         'email' => 'required|email',
         'password' => 'required'
     ]);
 
-    // 2. Verificar si el usuario existe por correo
     $user = User::where('email', $request->email)->first();
 
     if (!$user) {
-        // Retornamos 404 o 401 si el correo no está registrado
         return response()->json([
             'message' => 'Este correo no se encuentra registrado en el sistema.'
         ], 401);
     }
 
-    // 3. Verificar si la contraseña es correcta
     if (!Hash::check($request->password, $user->password)) {
         return response()->json([
             'message' => 'La contraseña ingresada es incorrecta.'
         ], 401);
     }
 
-    // 4. (Opcional) Verificar si el usuario está activo
     if (!$user->active_state) {
         return response()->json([
             'message' => 'Tu cuenta se encuentra desactivada. Contacta al administrador.'
         ], 403);
     }
 
-    // 5. Todo bien: Generar Token
     $token = $user->createToken('auth_token')->plainTextToken;
 
     return response()->json([
@@ -83,5 +77,15 @@ class AuthController extends Controller
             'token' => $token
         ], 201);
     }
+
+
+    public function logout(Request $request) {
+    // 1. Obtenemos el token que el usuario está usando actualmente y lo borramos
+   if ($request->user()) {
+        $request->user()->currentAccessToken()->delete();
+        return response()->json(['message' => 'Sesión cerrada'], 200);
+    }
+    return response()->json(['message' => 'No se encontró usuario'], 401);
+}
 }
  
