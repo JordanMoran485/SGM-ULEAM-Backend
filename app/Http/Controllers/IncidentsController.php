@@ -10,12 +10,14 @@ class IncidentsController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        //
-        $incidents = Incidents::all();
-        return response()->json($incidents);
-    }
+   public function index() {
+    $incidents = Incidents::latest()->get()->map(function($item) {
+        // Si hay imagen, creamos la URL completa, si no, null
+        $item->image_url = $item->image ? asset('storage/' . $item->image) : null;
+        return $item;
+    });
+    return response()->json($incidents);
+}
 
     /**
      * Store a newly created resource in storage.
@@ -26,6 +28,7 @@ class IncidentsController extends Controller
         $validateData = $request->validate([
             'title'=> 'required|string|max:30',
             'description'=> 'required|string',
+           
             'location'=> 'required|string|max:30',
             
         ]);

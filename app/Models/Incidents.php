@@ -10,6 +10,7 @@ class Incidents extends Model
     protected $fillable = [
         'title',
         'description',
+        'image',
         'location',
         'status',
     ];
