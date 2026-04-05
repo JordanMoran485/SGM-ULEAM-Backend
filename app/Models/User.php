@@ -25,6 +25,7 @@ class User extends Authenticatable
         'facultad',
         'carrera',
         'password',
+        'role',
         'active_state',
     ];
 
