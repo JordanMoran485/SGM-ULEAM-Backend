@@ -29,25 +29,31 @@ class IncidentsResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
+    protected static ?string $modelLabel = 'Incidente';
     protected static ?string $recordTitleAttribute = 'Incidents';
-
+    protected static ?string $navigationLabel = 'Incidentes';
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
                 TextInput::make('title')
-                    ->required(),
+                    ->required()
+                    ->label('Título'),
                 Textarea::make('description')
                     ->required()
-                    ->columnSpanFull(),
+                    ->columnSpanFull()
+                    ->label('Descripción'),
                 FileUpload::make('image')
-                    ->image(),
+                    ->image()
+                    ->label('Imagen'),
                 TextInput::make('location')
-                    ->required(),
+                    ->required()
+                    ->label('Ubicación'),
                 Select::make('status')
-                    ->options(['pending' => 'Pending', 'in_progress' => 'In progress', 'completed' => 'Completed'])
+                    ->options(['pending' => 'Pendiente', 'in_progress' => 'En progreso', 'completed' => 'Completado'])
                     ->default('pending')
-                    ->required(),
+                    ->required()
+                    ->label('Estado'),
             ]);
     }
 
@@ -55,20 +61,39 @@ class IncidentsResource extends Resource
     {
         return $schema
             ->components([
-                TextEntry::make('title'),
+                TextEntry::make('title')
+                    ->label('Título'),
                 TextEntry::make('description')
-                    ->columnSpanFull(),
+                    ->columnSpanFull()
+                    ->label('Descripción'),
                 ImageEntry::make('image')
-                    ->placeholder('-'),
-                TextEntry::make('location'),
-                TextEntry::make('status')
-                    ->badge(),
+                    ->placeholder('-')
+                    ->label('Imagen'),
+                TextEntry::make('location')
+                    ->label('Ubicación'),
+               TextEntry::make('status')
+                ->label('Estado')
+                ->badge()
+                ->formatStateUsing(fn (string $state): string => match ($state) {
+                    'pending' => 'Pendiente',
+                    'in_progress' => 'En progreso',
+                    'completed' => 'Completado',
+                    default => $state,
+                })
+                ->color(fn (string $state): string => match ($state) {
+                    'pending' => 'danger',
+                    'in_progress' => 'warning',
+                    'completed' => 'success',
+                    default => 'gray',
+                }),
                 TextEntry::make('created_at')
                     ->dateTime()
-                    ->placeholder('-'),
+                    ->placeholder('-')
+                    ->label('Creado en '),
                 TextEntry::make('updated_at')
                     ->dateTime()
-                    ->placeholder('-'),
+                    ->placeholder('-')
+                    ->label('Actualizado en '),
             ]);
     }
 
@@ -78,12 +103,28 @@ class IncidentsResource extends Resource
             ->recordTitleAttribute('Incidents')
             ->columns([
                 TextColumn::make('title')
-                    ->searchable(),
-                ImageColumn::make('image'),
+                    ->searchable()
+                     ->label('Título'),
+                ImageColumn::make('image')
+                 ->label('Imagen'),
                 TextColumn::make('location')
-                    ->searchable(),
+                    ->searchable()
+                     ->label('Ubicación'),
                 TextColumn::make('status')
-                    ->badge(),
+                    ->label('Estado')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'pending' => 'Pendiente',
+                        'in_progress' => 'En progreso',
+                        'completed' => 'Completado',
+                        default => $state,
+                    })
+                    ->color(fn (string $state): string => match ($state) {
+                        'pending' => 'danger',
+                        'in_progress' => 'warning',
+                        'completed' => 'success',
+                        default => 'gray',
+                    }),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

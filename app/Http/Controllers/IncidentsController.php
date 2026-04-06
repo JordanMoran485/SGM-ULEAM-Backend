@@ -12,7 +12,6 @@ class IncidentsController extends Controller
      */
    public function index() {
     $incidents = Incidents::latest()->get()->map(function($item) {
-        // Si hay imagen, creamos la URL completa, si no, null
         $item->image_url = $item->image ? asset('storage/' . $item->image) : null;
         return $item;
     });
