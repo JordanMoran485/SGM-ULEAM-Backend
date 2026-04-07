@@ -27,7 +27,6 @@ class UserResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $recordTitleAttribute = 'User';
 
     public static function form(Schema $schema): Schema
     {
@@ -84,7 +83,6 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->recordTitleAttribute('User')
             ->columns([
                 TextColumn::make('name')
                     ->searchable(),
