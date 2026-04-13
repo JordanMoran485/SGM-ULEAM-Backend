@@ -24,7 +24,7 @@ use Filament\Forms\Components\Select;
 class TaskResource extends Resource
 {
     protected static ?string $model = Task::class;
-    protected static ?string $modelLabel = 'Tareas';
+    protected static ?string $modelLabel = 'Tarea';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
 
@@ -88,7 +88,8 @@ class TaskResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('title')
-                    ->searchable(),
+                    ->searchable()
+                    ->label('Título'),
                 TextColumn::make('user.name')
                     ->numeric()
                     ->label('Conserje')

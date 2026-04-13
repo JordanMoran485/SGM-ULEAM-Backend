@@ -24,7 +24,7 @@ use Filament\Tables\Table;
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
-
+    protected static ?string $modelLabel = 'Usuario';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
 
@@ -33,21 +33,27 @@ class UserResource extends Resource
         return $schema
             ->components([
                 TextInput::make('name')
-                    ->required(),
-                TextInput::make('lastname'),
-                TextInput::make('facultad'),
-                TextInput::make('carrera'),
+                    ->required()
+                    ->label('Nombre'),
+                TextInput::make('lastname')
+                    ->required()
+                    ->label('Apellido'),
+                TextInput::make('facultad')
+                    ->label('Facultad'),
+                TextInput::make('carrera')
+                    ->label('Carrera'),
                 TextInput::make('email')
-                    ->label('Email address')
+                    ->label('Correo institucional')
                     ->email()
                     ->required(),
                 TextInput::make('password')
                     ->password()
                     ->required(),
                 TextInput::make('role')
-                    ->default('conserje'),
-                TextInput::make('profile_photo_path'),
-                Toggle::make('active_state'),
+                    ->default('conserje')
+                    ->label('Rol'),
+                Toggle::make('active_state')
+                    ->label('Estado activo'),
             ]);
     }
 
@@ -55,28 +61,35 @@ class UserResource extends Resource
     {
         return $schema
             ->components([
-                TextEntry::make('name'),
+                TextEntry::make('name')
+                    ->label('Nombre'),
                 TextEntry::make('lastname')
+                    ->label('Apellido')
                     ->placeholder('-'),
                 TextEntry::make('facultad')
+                    ->label('Facultad')
                     ->placeholder('-'),
                 TextEntry::make('carrera')
+                    ->label('Carrera')
                     ->placeholder('-'),
                 TextEntry::make('email')
-                    ->label('Email address'),
-                TextEntry::make('role')
+                    ->label('Correo institucional')
                     ->placeholder('-'),
-                TextEntry::make('profile_photo_path')
+                TextEntry::make('role')
+                    ->label('Rol')
                     ->placeholder('-'),
                 IconEntry::make('active_state')
                     ->boolean()
-                    ->placeholder('-'),
+                    ->placeholder('-')
+                    ->label('Estado activo'),
                 TextEntry::make('created_at')
                     ->dateTime()
-                    ->placeholder('-'),
+                    ->placeholder('-')
+                    ->label('Creado en'),
                 TextEntry::make('updated_at')
                     ->dateTime()
-                    ->placeholder('-'),
+                    ->placeholder('-')
+                    ->label('Actualizado en'),
             ]);
     }
 
@@ -85,30 +98,36 @@ class UserResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('name')
-                    ->searchable(),
+                    ->searchable()
+                    ->label('Nombre'),
                 TextColumn::make('lastname')
-                    ->searchable(),
+                    ->searchable()
+                    ->label('Apellido'),
                 TextColumn::make('facultad')
-                    ->searchable(),
+                    ->searchable()
+                    ->label('Facultad'),
                 TextColumn::make('carrera')
-                    ->searchable(),
+                    ->searchable()
+                    ->label('Carrera'),
                 TextColumn::make('email')
-                    ->label('Email address')
+                    ->label('Correo institucional')
                     ->searchable(),
                 TextColumn::make('role')
-                    ->searchable(),
-                TextColumn::make('profile_photo_path')
-                    ->searchable(),
+                    ->searchable()
+                    ->label('Rol'),
                 IconColumn::make('active_state')
-                    ->boolean(),
+                    ->boolean()
+                    ->label('Estado activo'),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->label('Creado en'),
                 TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->label('Actualizado en'),
             ])
             ->filters([
                 //
