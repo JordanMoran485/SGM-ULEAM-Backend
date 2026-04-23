@@ -4,6 +4,8 @@ namespace App\Filament\Resources\Users;
 
 use App\Filament\Resources\Users\Pages\ManageUsers;
 use App\Models\User;
+use App\Models\Facultad;
+use App\Models\Carrera; 
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -11,6 +13,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -27,6 +30,7 @@ class UserResource extends Resource
     protected static ?string $modelLabel = 'Usuario';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
+    
 
     public static function form(Schema $schema): Schema
     {
@@ -38,24 +42,36 @@ class UserResource extends Resource
                 TextInput::make('lastname')
                     ->required()
                     ->label('Apellido'),
-                TextInput::make('facultad')
-                    ->label('Facultad'),
-                TextInput::make('carrera')
-                    ->label('Carrera'),
-                TextInput::make('email')
-                    ->label('Correo institucional')
-                    ->email()
+                 Select::make('facultad_id')
+                    ->label('Facultad')
+                    ->options(Facultad::all()->pluck('name', 'id'))
+                    ->live() 
+                    ->afterStateUpdated(fn (callable $set) => $set('carrera_id', null)),
+
+                Select::make('carrera_id')
+                    ->label('Carrera')
+                    ->options(function (callable $get) {
+                        $facultadId = $get('facultad_id');
+                        if (!$facultadId) {
+                            return [];
+                        }
+                        return Carrera::where('facultad_id', $facultadId)->pluck('name', 'id');
+                    })
                     ->required(),
-                TextInput::make('password')
-                    ->password()
-                    ->required(),
-                TextInput::make('role')
-                    ->default('conserje')
-                    ->label('Rol'),
-                Toggle::make('active_state')
-                    ->label('Estado activo'),
-            ]);
-    }
+                                TextInput::make('email')
+                                    ->label('Correo institucional')
+                                    ->email()
+                                    ->required(),
+                                TextInput::make('password')
+                                    ->password()
+                                    ->required(),
+                                TextInput::make('role')
+                                    ->default('conserje')
+                                    ->label('Rol'),
+                                Toggle::make('active_state')
+                                    ->label('Estado activo'),
+                            ]);
+                    }
 
     public static function infolist(Schema $schema): Schema
     {
@@ -66,10 +82,10 @@ class UserResource extends Resource
                 TextEntry::make('lastname')
                     ->label('Apellido')
                     ->placeholder('-'),
-                TextEntry::make('facultad')
+                TextEntry::make('carrera.facultad.name')
                     ->label('Facultad')
                     ->placeholder('-'),
-                TextEntry::make('carrera')
+                TextEntry::make('carrera.name')
                     ->label('Carrera')
                     ->placeholder('-'),
                 TextEntry::make('email')
@@ -103,11 +119,13 @@ class UserResource extends Resource
                 TextColumn::make('lastname')
                     ->searchable()
                     ->label('Apellido'),
-                TextColumn::make('facultad')
+                TextColumn::make('carrera.facultad.name')
                     ->searchable()
+                     ->sortable()
                     ->label('Facultad'),
-                TextColumn::make('carrera')
+                TextColumn::make('carrera.name')
                     ->searchable()
+                     ->sortable()
                     ->label('Carrera'),
                 TextColumn::make('email')
                     ->label('Correo institucional')

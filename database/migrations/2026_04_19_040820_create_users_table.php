@@ -15,8 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('lastname')->nullable();
-            $table->string('facultad')->nullable();
-            $table->string('carrera')->nullable();
+            $table->foreignId('carrera_id')->nullable()->constrained('carreras')->onDelete('set null');
             $table->string('email')->unique();
             $table->string('password');
             $table->string('role')->default('conserje')->nullable();

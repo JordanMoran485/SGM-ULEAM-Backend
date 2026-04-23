@@ -57,8 +57,7 @@ class AuthController extends Controller
             'name'=>'required|string|max:200',
             'lastname'=> 'required|string|max:200',
             'email'=> 'required|email|max:255|unique:users,email',
-            'facultad'=> 'required|string|max:30',
-            'carrera'=> 'required|string|max:30',
+            'carrera_id'=> 'required|exists:carreras,id',
             'password'=> 'required|string|max:15',
             'active_state' => 'nullable|boolean',
         ]);

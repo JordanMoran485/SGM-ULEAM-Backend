@@ -33,8 +33,7 @@ class UserController extends Controller
             'name'=>'required|string|max:30',
             'lastname'=> 'required|string|max:30',
             'email'=> 'required|email|max:255|unique:users,email',
-            'facultad'=> 'required|string|max:30',
-            'carrera'=> 'required|string|max:30',
+            'carrera_id'=> 'required|exists:carreras,id',
             'password'=> 'required|string|max:30',
             'active_state'=> 'required|boolean',
         ]);

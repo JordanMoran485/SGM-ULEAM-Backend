@@ -22,8 +22,7 @@ class User extends Authenticatable
         'name',
         'lastname',
         'email',
-        'facultad',
-        'carrera',
+        'carrera_id',
         'password',
         'role',
         'active_state',
@@ -51,4 +50,5 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    public function carrera() { return $this->belongsTo(Carrera::class); }
 }
