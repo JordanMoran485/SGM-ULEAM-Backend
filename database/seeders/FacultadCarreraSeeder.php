@@ -9,6 +9,8 @@ use App\Models\Carrera;
 class FacultadCarreraSeeder extends Seeder
 {
     public function run(): void
+
+    // php artisan db:seed --class=FacultadCarreraSeeder
     {
         $faci = Facultad::create(['name' => 'Facultad de Ciencias Informáticas']);
 

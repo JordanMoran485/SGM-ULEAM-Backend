@@ -7,11 +7,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
-
-class User extends Authenticatable
+use Spatie\Permission\Traits\HasRoles;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, HasApiTokens;
+    use HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -24,7 +27,6 @@ class User extends Authenticatable
         'email',
         'carrera_id',
         'password',
-        'role',
         'active_state',
     ];
 
@@ -49,6 +51,12 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+    public function canAccessPanel(Panel $panel): bool
+    {
+        // Solo los que tienen el rol de 'admin' pueden entrar al panel
+        // O puedes dejarlo abierto mientras desarrollas y cerrarlo al final
+        return $this->hasRole('admin');
     }
     public function carrera() { return $this->belongsTo(Carrera::class); }
 }

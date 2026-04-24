@@ -58,18 +58,20 @@ class UserResource extends Resource
                         return Carrera::where('facultad_id', $facultadId)->pluck('name', 'id');
                     })
                     ->required(),
-                                TextInput::make('email')
-                                    ->label('Correo institucional')
-                                    ->email()
-                                    ->required(),
-                                TextInput::make('password')
-                                    ->password()
-                                    ->required(),
-                                TextInput::make('role')
-                                    ->default('conserje')
-                                    ->label('Rol'),
-                                Toggle::make('active_state')
-                                    ->label('Estado activo'),
+                TextInput::make('email')
+                    ->label('Correo institucional')
+                    ->email()
+                    ->required(),
+                TextInput::make('password')
+                    ->password()
+                    ->required(),
+                Select::make('roles')
+                    ->relationship('roles', 'name') 
+                    ->preload()
+                    ->searchable()
+                    ->label('Roles de Usuario'),
+                Toggle::make('active_state')
+                    ->label('Estado activo'),
                             ]);
                     }
 
@@ -91,9 +93,8 @@ class UserResource extends Resource
                 TextEntry::make('email')
                     ->label('Correo institucional')
                     ->placeholder('-'),
-                TextEntry::make('role')
-                    ->label('Rol')
-                    ->placeholder('-'),
+                TextEntry::make('roles.name')
+                    ->label('Rol de Usuario'),
                 IconEntry::make('active_state')
                     ->boolean()
                     ->placeholder('-')
@@ -130,9 +131,8 @@ class UserResource extends Resource
                 TextColumn::make('email')
                     ->label('Correo institucional')
                     ->searchable(),
-                TextColumn::make('role')
-                    ->searchable()
-                    ->label('Rol'),
+                TextColumn::make('roles.name')
+                    ->label('Rol Usuario'),
                 IconColumn::make('active_state')
                     ->boolean()
                     ->label('Estado activo'),

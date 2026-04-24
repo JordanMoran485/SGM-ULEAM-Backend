@@ -18,7 +18,6 @@ return new class extends Migration
             $table->foreignId('carrera_id')->nullable()->constrained('carreras')->onDelete('set null');
             $table->string('email')->unique();
             $table->string('password');
-            $table->string('role')->default('conserje')->nullable();
             $table->string('profile_photo_path')->nullable();
             $table->rememberToken();
             
