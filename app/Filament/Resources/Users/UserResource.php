@@ -46,7 +46,8 @@ class UserResource extends Resource
                     ->label('Facultad')
                     ->options(Facultad::all()->pluck('name', 'id'))
                     ->live() 
-                    ->afterStateUpdated(fn (callable $set) => $set('carrera_id', null)),
+                    ->afterStateUpdated(fn (callable $set) => $set('carrera_id', null))
+                     ->required(),
 
                 Select::make('carrera_id')
                     ->label('Carrera')
@@ -64,12 +65,14 @@ class UserResource extends Resource
                     ->required(),
                 TextInput::make('password')
                     ->password()
+                    ->label('Contraseña')
                     ->required(),
                 Select::make('roles')
                     ->relationship('roles', 'name') 
                     ->preload()
                     ->searchable()
-                    ->label('Roles de Usuario'),
+                    ->label('Rol de Usuario')
+                     ->required(),
                 Toggle::make('active_state')
                     ->label('Estado activo'),
                             ]);

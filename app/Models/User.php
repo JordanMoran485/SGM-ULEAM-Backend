@@ -54,9 +54,8 @@ class User extends Authenticatable implements FilamentUser
     }
     public function canAccessPanel(Panel $panel): bool
     {
-        // Solo los que tienen el rol de 'admin' pueden entrar al panel
-        // O puedes dejarlo abierto mientras desarrollas y cerrarlo al final
-        return $this->hasRole('admin');
+        
+        return $this->email === 'tu-correo@live.uleam.edu.ec' || $this->hasRole('super_admin');
     }
     public function carrera() { return $this->belongsTo(Carrera::class); }
 }
