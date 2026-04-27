@@ -53,9 +53,14 @@ class User extends Authenticatable implements FilamentUser
         ];
     }
     public function canAccessPanel(Panel $panel): bool
-    {
-        
-        return $this->email === 'tu-correo@live.uleam.edu.ec' || $this->hasRole('super_admin');
+{
+    if (!$this->active_state) {
+        return false;
     }
+
+    return $this->hasAnyRole(['super_admin', 'admin', 'conserje', 'supervisor']);
+}
+
+
     public function carrera() { return $this->belongsTo(Carrera::class); }
 }

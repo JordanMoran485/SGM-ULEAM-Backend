@@ -73,10 +73,19 @@ class UserResource extends Resource
                     ->searchable()
                     ->label('Rol de Usuario')
                      ->required(),
-                Toggle::make('active_state')
-                    ->label('Estado activo'),
-                            ]);
-                    }
+               Toggle::make('active_state')
+                    ->label('Estado de cuenta')
+                    ->onIcon('heroicon-m-check-circle')
+                    ->offIcon('heroicon-m-user-minus')
+                    ->onColor('success')
+                    ->offColor('danger')
+                    ->helperText('Si se desactiva, el usuario no podrá acceder al sistema ni a la App.')
+                    ->default(true),
+                    
+                    ]);
+                    
+                    
+    }    
 
     public static function infolist(Schema $schema): Schema
     {
@@ -101,7 +110,7 @@ class UserResource extends Resource
                 IconEntry::make('active_state')
                     ->boolean()
                     ->placeholder('-')
-                    ->label('Estado activo'),
+                    ->label('Estado'),
                 TextEntry::make('created_at')
                     ->dateTime()
                     ->placeholder('-')
@@ -135,10 +144,11 @@ class UserResource extends Resource
                     ->label('Correo institucional')
                     ->searchable(),
                 TextColumn::make('roles.name')
-                    ->label('Rol Usuario'),
+                    ->label('Rol Usuario')
+                     ->searchable(),
                 IconColumn::make('active_state')
                     ->boolean()
-                    ->label('Estado activo'),
+                    ->label('Estado'),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
