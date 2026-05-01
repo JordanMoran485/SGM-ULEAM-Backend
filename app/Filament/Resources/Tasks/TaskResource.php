@@ -34,24 +34,51 @@ class TaskResource extends Resource
             ->components([
                 TextInput::make('title')
                     ->required()
-                    ->label('Título'),
+                    ->label('Título')
+                    ->maxLength(15),
                 Textarea::make('description')
                     ->columnSpanFull()
-                    ->label('Descripción'),
+                    ->label('Descripción')
+                    ->maxLength(15)
+                    ->required(),
                 Select::make('user_id')
                     ->label('Asignar a Conserje')
                     ->relationship('user', 'name') 
                     ->searchable() 
                     ->preload() 
                     ->required(),
+                Select::make('status')
+                    ->label('Estado de la Tarea')
+                    ->options([
+                        'Pendiente' => 'Pendiente',
+                        'En Proceso' => 'En Proceso',
+                        'Completada' => 'Completada',
+                    ])
+                    ->default('Pendiente')
+                    ->required(),
+                Select::make('priority')
+                    ->preload() 
+                    ->label('Prioridad')
+                    ->options([
+                        'Baja' => 'Baja',
+                        'Media' => 'Media',
+                        'Alta' => 'Alta',
+                    ])
+                     ->default('Media')
+                     ->required(),
                 TextInput::make('location')
                     ->label('Ubicación')
-                    ->required(),
+                    ->required()
+                    ->maxLength(15),
                 DatePicker::make('due_date')
-                    ->label('Fecha de vencimiento')
-                    ->required(),
-            ]);
-    }
+                    ->label('Fecha de entrega')
+                    ->required()
+                    ->displayFormat('d/m/Y') 
+                    ->native(false)
+                    ->closeOnDateSelection() 
+                    ->prefixIcon('heroicon-m-calendar-days'),
+                        ]);
+                        }
 
     public static function infolist(Schema $schema): Schema
     {
@@ -65,21 +92,23 @@ class TaskResource extends Resource
                     ->label('Descripción'),
                 TextEntry::make('user.name')
                     ->label('Conserje'),
-                TextEntry::make('location')
+                TextEntry::make('priority')
+                    ->label('Prioridad'),
+                TextEntry::make('status')
+                    ->label('Estado')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'Pendiente' => 'gray',
+                        'En Proceso' => 'warning',
+                        'Completada' => 'success',
+                    }),
+                    TextEntry::make('location')
                     ->placeholder('-')
                     ->label('Ubicación'),
                 TextEntry::make('due_date')
                     ->date()
                     ->placeholder('-')
-                    ->label('Fecha de vencimiento'),
-                TextEntry::make('created_at')
-                    ->dateTime()
-                    ->placeholder('-')
-                    ->label('Creado en'),
-                TextEntry::make('updated_at')
-                    ->dateTime()
-                    ->placeholder('-')
-                    ->label('Actualizado en'),
+                    ->label('Fecha de entrega'),
             ]);
     }
 
@@ -90,29 +119,34 @@ class TaskResource extends Resource
                 TextColumn::make('title')
                     ->searchable()
                     ->label('Título'),
-                TextColumn::make('user.name')
-                    ->numeric()
-                    ->label('Conserje')
+                TextColumn::make('description')
+                    ->label('Descripción')
+                     ->searchable(),
+                TextColumn::make('user.email')
+                    ->label('Asignado a')
+                     ->searchable(),
+                TextColumn::make('priority')
+                    ->label('Prioridad')
                      ->searchable()
                     ->sortable(),
+                TextColumn::make('status')
+                    ->label('Estado')
+                     ->searchable()
+                    ->sortable()
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'Pendiente' => 'gray',
+                        'En Proceso' => 'warning',
+                        'Completada' => 'success',
+                    }),
                 TextColumn::make('location')
                     ->searchable()
                     ->label('Ubicación'),
                 TextColumn::make('due_date')
-                    ->date()
-                    ->sortable()
-                     ->searchable()
-                    ->label('Fecha de vencimiento'),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->label('Creado en')
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->label('Actualizado en')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->label('Fecha de entrega')
+                    ->date('d/m/Y') 
+                    ->sortable() 
+                    ->searchable(),
             ])
             ->filters([
                 //

@@ -38,10 +38,12 @@ class UserResource extends Resource
             ->components([
                 TextInput::make('name')
                     ->required()
-                    ->label('Nombre'),
+                    ->label('Nombre')
+                    ->maxLength(30),
                 TextInput::make('lastname')
                     ->required()
-                    ->label('Apellido'),
+                    ->label('Apellido')
+                    ->maxLength(30),
                  Select::make('facultad_id')
                     ->label('Facultad')
                     ->options(Facultad::all()->pluck('name', 'id'))
@@ -62,11 +64,13 @@ class UserResource extends Resource
                 TextInput::make('email')
                     ->label('Correo institucional')
                     ->email()
-                    ->required(),
+                    ->required()
+                    ->maxLength(30),
                 TextInput::make('password')
                     ->password()
                     ->label('Contraseña')
-                    ->required(),
+                    ->required()
+                    ->maxLength(15),
                 Select::make('roles')
                     ->relationship('roles', 'name') 
                     ->preload()
