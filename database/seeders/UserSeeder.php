@@ -12,8 +12,15 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         // php artisan db:seed --class=UserSeeder
-        
-        $role = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+
+        $roles = collect([
+            'super_admin',
+            'admin',
+            'supervisor',
+            'conserje',
+        ])->mapWithKeys(fn (string $name): array => [
+            $name => Role::firstOrCreate(['name' => $name, 'guard_name' => 'web']),
+        ]);
 
         $users = [
             [
@@ -22,7 +29,7 @@ class UserSeeder extends Seeder
                 'email'        => 'jordan@gmail.com',
                 'carrera_id'   => 1,
                 'password'     => Hash::make('123456'),
-                'active_state' => false,
+                'active_state' => true,
             ],
             [
                 'name'         => 'Kevin',
@@ -30,7 +37,7 @@ class UserSeeder extends Seeder
                 'email'        => 'kevin@gmail.com',
                 'carrera_id'   => 1,
                 'password'     => Hash::make('123456'),
-                'active_state' => true,
+                'active_state' => false,
             ],
             [
                 'name'         => 'Adrian',
@@ -47,7 +54,7 @@ class UserSeeder extends Seeder
                 ['email' => $userData['email']], // Si ya existe, solo lo actualiza
                 $userData
             );
-            $user->assignRole($role);
+            $user->syncRoles([$roles['super_admin']]);
         }
     }
 }

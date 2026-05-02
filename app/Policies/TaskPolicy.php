@@ -11,6 +11,15 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 class TaskPolicy
 {
     use HandlesAuthorization;
+
+    public function before(AuthUser $authUser, string $ability): bool | null
+    {
+        if (method_exists($authUser, 'hasAnyRole') && $authUser->hasAnyRole(['super_admin', 'admin', 'supervisor', 'conserje'])) {
+            return true;
+        }
+
+        return null;
+    }
     
     public function viewAny(AuthUser $authUser): bool
     {

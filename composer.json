@@ -14,6 +14,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
         "laravel/wayfinder": "^0.1.11",
+        "saade/filament-fullcalendar": "v4.0.0-beta7",
         "spatie/laravel-permission": "^6.25",
         "zircote/swagger-php": "^6.0"
     },
