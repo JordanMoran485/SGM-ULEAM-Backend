@@ -4,3 +4,56 @@
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
 @source '../../../../vendor/saade/filament-fullcalendar/resources/views/**/*.blade.php';
+
+html.dark .filament-fullcalendar {
+    --fc-page-bg-color: rgb(17 24 39);
+    --fc-neutral-bg-color: rgb(31 41 55);
+    --fc-neutral-text-color: rgb(255 255 255);
+    --fc-button-text-color: rgb(255 255 255);
+    --fc-button-bg-color: rgb(31 41 55);
+    --fc-button-hover-bg-color: rgb(55 65 81);
+    --fc-button-active-bg-color: rgb(55 65 81);
+    --fc-list-event-hover-bg-color: rgb(55 65 81);
+}
+
+html.dark .filament-fullcalendar .fc .fc-toolbar-title {
+    color: rgb(243 244 246) !important;
+}
+
+html.dark .filament-fullcalendar .fc .fc-button {
+    background-color: rgb(31 41 55);
+    border-color: rgb(75 85 99);
+    color: rgb(255 255 255) !important;
+}
+
+html.dark .filament-fullcalendar .fc .fc-button:hover,
+html.dark .filament-fullcalendar .fc .fc-button:focus,
+html.dark .filament-fullcalendar .fc .fc-button-primary:not(:disabled).fc-button-active,
+html.dark .filament-fullcalendar .fc .fc-button-primary:not(:disabled):active {
+    background-color: rgb(55 65 81);
+    border-color: rgb(107 114 128);
+    color: rgb(255 255 255);
+}
+
+html.dark .filament-fullcalendar .fc .fc-scrollgrid-section-header th,
+html.dark .filament-fullcalendar .fc .fc-col-header-cell,
+html.dark .filament-fullcalendar .fc .fc-scrollgrid-sync-inner,
+html.dark .filament-fullcalendar .fc .fc-scrollgrid-sync-inner a,
+html.dark .filament-fullcalendar .fc .fc-col-header-cell-cushion {
+    background-color: rgb(31 41 55) !important;
+    color: rgb(255 255 255) !important;
+}
+
+html.dark .filament-fullcalendar .fc .fc-scrollgrid-section-header th {
+    border-color: rgb(107 114 128) !important;
+}
+
+html.dark .filament-fullcalendar .fc .fc-scrollgrid-sync-inner {
+    border-radius: 0 !important;
+}
+
+html.dark .filament-fullcalendar .fc .fc-col-header-cell-cushion {
+    display: block;
+    padding: 0.5rem 0.25rem;
+    text-decoration: none !important;
+}
