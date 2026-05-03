@@ -19,6 +19,12 @@ class User extends Authenticatable implements FilamentUser
     use HasFactory, Notifiable, HasApiTokens;
     use HasRoles;
 
+    public const SYSTEM_ROLES = [
+        'super_admin',
+        'admin',
+        'supervisor',
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -78,7 +84,30 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return true;
+        return $this->canAccessSystem();
+    }
+
+    public function canAccessSystem(): bool
+    {
+        return $this->active_state
+            && $this->hasAnyRole(self::SYSTEM_ROLES);
+    }
+
+    public function getSystemAccessDenialMessage(): ?string
+    {
+        if (! $this->active_state) {
+            return 'Tu cuenta de la Uleam está desactivada. Por favor, contacta a soporte técnico.';
+        }
+
+        if ($this->hasRole('conserje')) {
+            return 'Tu cuenta tiene el rol de conserje y no puede iniciar sesión en este panel.';
+        }
+
+        if (! $this->hasAnyRole(self::SYSTEM_ROLES)) {
+            return 'Tu cuenta no tiene permisos para acceder al sistema.';
+        }
+
+        return null;
     }
 
 

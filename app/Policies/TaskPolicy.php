@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
+use App\Models\User as AppUser;
 use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Task;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -14,7 +15,7 @@ class TaskPolicy
 
     public function before(AuthUser $authUser, string $ability): bool | null
     {
-        if (method_exists($authUser, 'hasAnyRole') && $authUser->hasAnyRole(['super_admin', 'admin', 'supervisor', 'conserje'])) {
+        if (method_exists($authUser, 'hasAnyRole') && $authUser->hasAnyRole(AppUser::SYSTEM_ROLES)) {
             return true;
         }
 

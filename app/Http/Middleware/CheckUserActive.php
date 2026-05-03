@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use Closure;
+use Filament\Notifications\Notification;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -15,12 +16,48 @@ class CheckUserActive
      */
     public function handle(Request $request, Closure $next): Response
     {
-       if (auth()->check() && !auth()->user()->active_state) {
-        auth()->logout();
-        return redirect()->route('filament.admin.auth.login')
-            ->with('error', 'Tu cuenta ha sido desactivada.');
+        $user = $request->user();
+
+        if (! $user) {
+            return $next($request);
+        }
+
+        if (method_exists($user, 'getSystemAccessDenialMessage')) {
+            $message = $user->getSystemAccessDenialMessage();
+
+            if (! $message) {
+                return $next($request);
+            }
+
+            $this->disconnect($request);
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message], 403);
+            }
+
+            Notification::make()
+                ->title($message)
+                ->danger()
+                ->send();
+
+            return redirect()
+                ->route('filament.admin.auth.login')
+                ->with('error', $message);
+        }
+
+        return $next($request);
     }
 
-    return $next($request);
+    protected function disconnect(Request $request): void
+    {
+        if ($request->user()?->currentAccessToken()) {
+            $request->user()->tokens()->delete();
+        }
+
+        if ($request->hasSession()) {
+            auth()->logout();
+            $request->session()?->invalidate();
+            $request->session()?->regenerateToken();
+        }
     }
 }
