@@ -22,7 +22,6 @@ class User extends Authenticatable implements FilamentUser
 
     public const SYSTEM_ROLES = [
         'super_admin',
-        'admin',
         'supervisor',
     ];
 
@@ -92,6 +91,16 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->active_state
             && $this->hasAnyRole(self::SYSTEM_ROLES);
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('super_admin');
+    }
+
+    public function isSupervisor(): bool
+    {
+        return $this->hasRole('supervisor');
     }
 
     public function getSystemAccessDenialMessage(): ?string

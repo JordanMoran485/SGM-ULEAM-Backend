@@ -8,6 +8,15 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 class UserPolicy
 {
     use HandlesAuthorization;
+
+    public function before(AuthUser $authUser, string $ability): bool | null
+    {
+        if (method_exists($authUser, 'isSuperAdmin') && $authUser->isSuperAdmin()) {
+            return true;
+        }
+
+        return false;
+    }
     
     public function viewAny(AuthUser $authUser): bool
     {

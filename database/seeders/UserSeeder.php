@@ -15,7 +15,6 @@ class UserSeeder extends Seeder
 
         $roles = collect([
             'super_admin',
-            'admin',
             'supervisor',
             'conserje',
         ])->mapWithKeys(fn (string $name): array => [
@@ -51,7 +50,7 @@ class UserSeeder extends Seeder
 
         foreach ($users as $userData) {
             $user = User::updateOrCreate(
-                ['email' => $userData['email']], // Si ya existe, solo lo actualiza
+                ['email' => $userData['email']], 
                 $userData
             );
             $user->syncRoles([$roles['super_admin']]);

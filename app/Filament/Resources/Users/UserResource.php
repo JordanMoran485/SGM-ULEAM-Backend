@@ -73,7 +73,11 @@ class UserResource extends Resource
                     ->required()
                     ->maxLength(15),
                 Select::make('roles')
-                    ->relationship('roles', 'name') 
+                    ->relationship(
+                        'roles',
+                        'name',
+                        modifyQueryUsing: fn ($query) => $query->whereIn('name', ['super_admin', 'supervisor', 'conserje'])
+                    )
                     ->preload()
                     ->searchable()
                     ->label('Rol de Usuario')
@@ -185,5 +189,10 @@ class UserResource extends Resource
         return [
             'index' => ManageUsers::route('/'),
         ];
+    }
+
+    public static function canAccess(): bool
+    {
+        return auth()->user()?->isSuperAdmin() ?? false;
     }
 }
