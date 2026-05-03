@@ -21,8 +21,11 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class TaskResource extends Resource
 {
@@ -193,7 +196,67 @@ class TaskResource extends Resource
                     ->searchable(),
             ])
             ->filters([
-                //
+                SelectFilter::make('status')
+                    ->label('Estado')
+                    ->options([
+                        'Pendiente' => 'Pendiente',
+                        'En Proceso' => 'En Proceso',
+                        'Completada' => 'Completada',
+                    ]),
+                SelectFilter::make('priority')
+                    ->label('Prioridad')
+                    ->options([
+                        'Alta' => 'Alta',
+                        'Media' => 'Media',
+                        'Baja' => 'Baja',
+                    ]),
+                SelectFilter::make('user_id')
+                    ->label('Conserje')
+                    ->relationship('user', 'name')
+                    ->searchable()
+                    ->preload(),
+                Filter::make('schedule')
+                    ->label('Rango de fechas')
+                    ->schema([
+                        DatePicker::make('from')
+                            ->label('Desde')
+                            ->native(false),
+                        DatePicker::make('until')
+                            ->label('Hasta')
+                            ->native(false),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                filled($data['from'] ?? null),
+                                fn (Builder $query): Builder => $query->whereDate('start_at', '>=', $data['from']),
+                            )
+                            ->when(
+                                filled($data['until'] ?? null),
+                                fn (Builder $query): Builder => $query->whereDate('start_at', '<=', $data['until']),
+                            );
+                    }),
+                Filter::make('active_only')
+                    ->label('Solo activas')
+                    ->query(fn (Builder $query): Builder => $query->where('status', '!=', 'Completada')),
+                Filter::make('overdue')
+                    ->label('Vencidas')
+                    ->query(
+                        fn (Builder $query): Builder => $query
+                            ->where('status', '!=', 'Completada')
+                            ->whereDate('due_date', '<', now()->toDateString())
+                    ),
+                Filter::make('attention_required')
+                    ->label('Atención requerida')
+                    ->query(
+                        fn (Builder $query): Builder => $query
+                            ->where('status', '!=', 'Completada')
+                            ->where(function (Builder $query): void {
+                                $query
+                                    ->whereDate('due_date', '<', now()->toDateString())
+                                    ->orWhere('priority', 'Alta');
+                            })
+                    ),
             ])
             ->recordActions([
                 ViewAction::make(),

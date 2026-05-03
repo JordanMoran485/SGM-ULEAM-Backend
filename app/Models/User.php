@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
@@ -112,4 +113,9 @@ class User extends Authenticatable implements FilamentUser
 
 
     public function carrera() { return $this->belongsTo(Carrera::class); }
+
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(Task::class);
+    }
 }

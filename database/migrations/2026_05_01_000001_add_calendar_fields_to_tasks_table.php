@@ -18,15 +18,19 @@ return new class extends Migration
             $table->index(['user_id', 'start_at']);
         });
 
+        $dateTimeExpression = DB::getDriverName() === 'sqlite'
+            ? fn (string $time): string => "due_date || ' {$time}'"
+            : fn (string $time): string => "CONCAT(due_date, ' {$time}')";
+
         DB::statement("
             UPDATE tasks
             SET
                 start_at = CASE
-                    WHEN due_date IS NOT NULL THEN CONCAT(due_date, ' 00:00:00')
+                    WHEN due_date IS NOT NULL THEN {$dateTimeExpression('00:00:00')}
                     ELSE start_at
                 END,
                 end_at = CASE
-                    WHEN due_date IS NOT NULL THEN CONCAT(due_date, ' 23:59:59')
+                    WHEN due_date IS NOT NULL THEN {$dateTimeExpression('23:59:59')}
                     ELSE end_at
                 END,
                 all_day = 1
