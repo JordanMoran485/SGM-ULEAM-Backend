@@ -29,12 +29,12 @@ class TaskStatusPriorityChart extends ChartWidget
                 [
                     'label' => 'Tareas',
                     'data' => [
-                        TaskDashboardFilters::apply(Task::query(), $filters)->where('status', 'Pendiente')->count(),
-                        TaskDashboardFilters::apply(Task::query(), $filters)->where('status', 'En Proceso')->count(),
-                        TaskDashboardFilters::apply(Task::query(), $filters)->where('status', 'Completada')->count(),
-                        TaskDashboardFilters::apply(Task::query(), $filters)->where('priority', 'Alta')->count(),
-                        TaskDashboardFilters::apply(Task::query(), $filters)->where('priority', 'Media')->count(),
-                        TaskDashboardFilters::apply(Task::query(), $filters)->where('priority', 'Baja')->count(),
+                        TaskDashboardFilters::apply(Task::query()->visibleTo(auth()->user()), $filters)->where('status', 'Pendiente')->count(),
+                        TaskDashboardFilters::apply(Task::query()->visibleTo(auth()->user()), $filters)->where('status', 'En Proceso')->count(),
+                        TaskDashboardFilters::apply(Task::query()->visibleTo(auth()->user()), $filters)->where('status', 'Completada')->count(),
+                        TaskDashboardFilters::apply(Task::query()->visibleTo(auth()->user()), $filters)->where('priority', 'Alta')->count(),
+                        TaskDashboardFilters::apply(Task::query()->visibleTo(auth()->user()), $filters)->where('priority', 'Media')->count(),
+                        TaskDashboardFilters::apply(Task::query()->visibleTo(auth()->user()), $filters)->where('priority', 'Baja')->count(),
                     ],
                     'backgroundColor' => [
                         '#94a3b8',

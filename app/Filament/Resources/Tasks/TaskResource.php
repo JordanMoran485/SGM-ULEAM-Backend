@@ -212,9 +212,7 @@ class TaskResource extends Resource
                     ]),
                 SelectFilter::make('user_id')
                     ->label('Conserje')
-                    ->relationship('user', 'name')
-                    ->searchable()
-                    ->preload(),
+                    ->options(fn (): array => User::conserjeOptions()),
                 Filter::make('schedule')
                     ->label('Rango de fechas')
                     ->schema([
@@ -275,5 +273,12 @@ class TaskResource extends Resource
         return [
             'index' => ManageTasks::route('/'),
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->with('user')
+            ->visibleTo(auth()->user());
     }
 }

@@ -68,6 +68,7 @@ class TaskAlertsWidget extends TableWidget
     {
         return TaskDashboardFilters::apply(
             Task::query()
+            ->visibleTo(auth()->user())
             ->where('status', '!=', 'Completada')
             ->where(function (Builder $query): void {
                 $query

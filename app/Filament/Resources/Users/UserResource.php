@@ -3,17 +3,18 @@
 namespace App\Filament\Resources\Users;
 
 use App\Filament\Resources\Users\Pages\ManageUsers;
-use App\Models\User;
+use App\Models\Carrera;
 use App\Models\Facultad;
-use App\Models\Carrera; 
+use App\Models\User;
 use BackedEnum;
+use Closure;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -23,15 +24,18 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Spatie\Permission\Models\Role;
 
 class UserResource extends Resource
 {
     protected static ?string $model = User::class;
-    protected static ?string $modelLabel = 'Usuario';
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
-    protected static ?int $navigationSort = 1;
 
-    
+    protected static ?string $modelLabel = 'Usuario';
+
+    protected static string | BackedEnum | null $navigationIcon = Heroicon::OutlinedUsers;
+
+    protected static ?int $navigationSort = 1;
 
     public static function form(Schema $schema): Schema
     {
@@ -45,21 +49,41 @@ class UserResource extends Resource
                     ->required()
                     ->label('Apellido')
                     ->maxLength(30),
-                 Select::make('facultad_id')
+                Select::make('facultad_id')
                     ->label('Facultad')
-                    ->options(Facultad::all()->pluck('name', 'id'))
-                    ->live() 
-                    ->afterStateUpdated(fn (callable $set) => $set('carrera_id', null))
-                     ->required(),
+                    ->options(function (): array {
+                        $user = auth()->user();
 
+                        if ($user?->isSupervisor() && $user->facultad_id) {
+                            return Facultad::query()
+                                ->whereKey($user->facultad_id)
+                                ->pluck('name', 'id')
+                                ->all();
+                        }
+
+                        return Facultad::query()->orderBy('name')->pluck('name', 'id')->all();
+                    })
+                    ->dehydrated(false)
+                    ->afterStateHydrated(function (Select $component, ?User $record): void {
+                        $component->state($record?->facultad_id ?? auth()->user()?->facultad_id);
+                    })
+                    ->disabled(fn (): bool => auth()->user()?->isSupervisor() ?? false)
+                    ->live()
+                    ->afterStateUpdated(fn (callable $set) => $set('carrera_id', null))
+                    ->required(),
                 Select::make('carrera_id')
                     ->label('Carrera')
                     ->options(function (callable $get) {
                         $facultadId = $get('facultad_id');
-                        if (!$facultadId) {
+
+                        if (! $facultadId) {
                             return [];
                         }
-                        return Carrera::where('facultad_id', $facultadId)->pluck('name', 'id');
+
+                        return Carrera::query()
+                            ->where('facultad_id', $facultadId)
+                            ->orderBy('name')
+                            ->pluck('name', 'id');
                     })
                     ->required(),
                 TextInput::make('email')
@@ -70,19 +94,57 @@ class UserResource extends Resource
                 TextInput::make('password')
                     ->password()
                     ->label('Contraseña')
-                    ->required()
+                    ->required(fn (string $operation): bool => $operation === 'create')
+                    ->dehydrated(fn (?string $state): bool => filled($state))
                     ->maxLength(15),
                 Select::make('roles')
                     ->relationship(
                         'roles',
                         'name',
-                        modifyQueryUsing: fn ($query) => $query->whereIn('name', ['super_admin', 'supervisor', 'conserje'])
+                        modifyQueryUsing: function (Builder $query): Builder {
+                            $roles = auth()->user()?->isSupervisor()
+                                ? ['conserje']
+                                : ['super_admin', 'supervisor', 'conserje'];
+
+                            return $query->whereIn('name', $roles);
+                        }
                     )
                     ->preload()
                     ->searchable()
                     ->label('Rol de Usuario')
-                     ->required(),
-               Toggle::make('active_state')
+                    ->required()
+                    ->rule(function (callable $get, ?User $record) {
+                        return function (string $attribute, mixed $value, Closure $fail) use ($get, $record): void {
+                            $roleId = is_array($value) ? reset($value) : $value;
+                            $roleName = Role::query()->find($roleId)?->name;
+
+                            if ($roleName !== 'supervisor') {
+                                return;
+                            }
+
+                            $facultadId = $get('facultad_id');
+
+                            if (! $facultadId) {
+                                $fail('Debes seleccionar una facultad para asignar el rol de supervisor.');
+
+                                return;
+                            }
+
+                            $supervisorExists = User::query()
+                                ->when($record, fn (Builder $query): Builder => $query->whereKeyNot($record->getKey()))
+                                ->role('supervisor')
+                                ->whereHas(
+                                    'carrera',
+                                    fn (Builder $query): Builder => $query->where('facultad_id', $facultadId)
+                                )
+                                ->exists();
+
+                            if ($supervisorExists) {
+                                $fail('Ya existe un supervisor asignado para esta facultad.');
+                            }
+                        };
+                    }),
+                Toggle::make('active_state')
                     ->label('Estado de cuenta')
                     ->onIcon('heroicon-m-check-circle')
                     ->offIcon('heroicon-m-user-minus')
@@ -90,11 +152,8 @@ class UserResource extends Resource
                     ->offColor('danger')
                     ->helperText('Si se desactiva, el usuario no podrá acceder al sistema ni a la App.')
                     ->default(true),
-                    
-                    ]);
-                    
-                    
-    }    
+            ]);
+    }
 
     public static function infolist(Schema $schema): Schema
     {
@@ -143,18 +202,18 @@ class UserResource extends Resource
                     ->label('Apellido'),
                 TextColumn::make('carrera.facultad.name')
                     ->searchable()
-                     ->sortable()
+                    ->sortable()
                     ->label('Facultad'),
                 TextColumn::make('carrera.name')
                     ->searchable()
-                     ->sortable()
+                    ->sortable()
                     ->label('Carrera'),
                 TextColumn::make('email')
                     ->label('Correo institucional')
                     ->searchable(),
                 TextColumn::make('roles.name')
                     ->label('Rol Usuario')
-                     ->searchable(),
+                    ->searchable(),
                 IconColumn::make('active_state')
                     ->boolean()
                     ->label('Estado'),
@@ -179,9 +238,27 @@ class UserResource extends Resource
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->visible(fn (): bool => auth()->user()?->isSuperAdmin() ?? false),
                 ]),
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery()
+            ->with(['carrera.facultad', 'roles'])
+            ->whereHas('roles', fn (Builder $query): Builder => $query->whereIn('name', ['super_admin', 'supervisor', 'conserje']));
+
+        $user = auth()->user();
+
+        if ($user?->isSupervisor()) {
+            $query
+                ->role('conserje')
+                ->visibleTo($user);
+        }
+
+        return $query;
     }
 
     public static function getPages(): array
@@ -193,6 +270,6 @@ class UserResource extends Resource
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->isSuperAdmin() ?? false;
+        return auth()->user()?->isSuperAdmin() || auth()->user()?->isSupervisor() || false;
     }
 }

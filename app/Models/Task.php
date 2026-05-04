@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Task extends Model
@@ -55,6 +56,36 @@ class Task extends Model
                 $task->end_at = $task->start_at->copy();
             }
         });
+    }
+
+    public function scopeVisibleTo(Builder $query, ?User $user): Builder
+    {
+        if (! $user) {
+            return $query;
+        }
+
+        if ($user->isSuperAdmin()) {
+            return $query;
+        }
+
+        if ($user->isSupervisor()) {
+            $facultadId = $user->facultad_id;
+
+            if (! $facultadId) {
+                return $query->whereRaw('1 = 0');
+            }
+
+            return $query->whereHas(
+                'user.carrera',
+                fn (Builder $userQuery): Builder => $userQuery->where('facultad_id', $facultadId)
+            );
+        }
+
+        if ($user->hasRole('conserje')) {
+            return $query->where('user_id', $user->getKey());
+        }
+
+        return $query->whereRaw('1 = 0');
     }
 
     public function user(): BelongsTo

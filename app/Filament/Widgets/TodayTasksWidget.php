@@ -71,6 +71,7 @@ class TodayTasksWidget extends TableWidget
     {
         return TaskDashboardFilters::apply(
             Task::query()
+                ->visibleTo(auth()->user())
                 ->with('user')
                 ->whereDate('start_at', now()->toDateString())
                 ->orderBy('start_at'),

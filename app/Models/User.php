@@ -5,6 +5,7 @@ namespace App\Models;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
@@ -66,20 +67,51 @@ class User extends Authenticatable implements FilamentUser
     {
         return static::queryConserjes()
             ->orderBy('name')
-            ->pluck('name', 'id')
+            ->get()
+            ->mapWithKeys(fn (self $user): array => [$user->id => "{$user->name} {$user->lastname}"])
             ->all();
     }
 
-    public static function queryConserjes(): Builder
+    public static function queryConserjes(?self $viewer = null): Builder
     {
-        $query = static::query()->where('active_state', true);
+        $viewer ??= auth()->user();
+
+        $query = static::query()
+            ->with('carrera.facultad')
+            ->where('active_state', true);
         $guardName = (new static())->getDefaultGuardName();
 
         if (Role::query()->where('name', 'conserje')->where('guard_name', $guardName)->exists()) {
             $query->role('conserje');
         }
 
-        return $query;
+        return $query->visibleTo($viewer);
+    }
+
+    public function scopeVisibleTo(Builder $query, ?self $viewer): Builder
+    {
+        if (! $viewer) {
+            return $query;
+        }
+
+        if ($viewer->isSuperAdmin()) {
+            return $query;
+        }
+
+        if ($viewer->isSupervisor()) {
+            $facultadId = $viewer->facultad_id;
+
+            if (! $facultadId) {
+                return $query->whereRaw('1 = 0');
+            }
+
+            return $query->whereHas(
+                'carrera',
+                fn (Builder $careerQuery): Builder => $careerQuery->where('facultad_id', $facultadId)
+            );
+        }
+
+        return $query->whereKey($viewer->getKey());
     }
 
     public function canAccessPanel(Panel $panel): bool
@@ -121,7 +153,36 @@ class User extends Authenticatable implements FilamentUser
     }
 
 
-    public function carrera() { return $this->belongsTo(Carrera::class); }
+    public function carrera(): BelongsTo
+    {
+        return $this->belongsTo(Carrera::class);
+    }
+
+    public function getFacultadIdAttribute(): ?int
+    {
+        return $this->carrera?->facultad_id;
+    }
+
+    public function belongsToFacultad(?int $facultadId): bool
+    {
+        return filled($facultadId) && $this->facultad_id === $facultadId;
+    }
+
+    public function belongsToSameFacultadAs(?self $user): bool
+    {
+        return $this->belongsToFacultad($user?->facultad_id);
+    }
+
+    public function canManageUser(self $user): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return $this->isSupervisor()
+            && $user->hasRole('conserje')
+            && $user->belongsToSameFacultadAs($this);
+    }
 
     public function tasks(): HasMany
     {

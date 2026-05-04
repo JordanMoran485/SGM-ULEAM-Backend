@@ -168,12 +168,9 @@ class TasksCalendarWidget extends FullCalendarWidget
 
     protected function getFilteredTaskQuery(): Builder
     {
-        $query = Task::query()->whereNotNull('start_at');
-        $user = auth()->user();
-
-        if ($user?->hasRole('conserje')) {
-            $query->where('user_id', $user->getKey());
-        }
+        $query = Task::query()
+            ->visibleTo(auth()->user())
+            ->whereNotNull('start_at');
 
         $filters = $this->pageFilters ?? [];
 

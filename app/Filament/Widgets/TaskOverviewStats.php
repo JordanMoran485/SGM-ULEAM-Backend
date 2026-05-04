@@ -22,8 +22,11 @@ class TaskOverviewStats extends StatsOverviewWidget
     protected function getStats(): array
     {
         $filters = $this->pageFilters;
-        $baseQuery = TaskDashboardFilters::apply(Task::query(), $filters);
-        $activeTasksQuery = TaskDashboardFilters::apply(Task::query()->where('status', '!=', 'Completada'), $filters);
+        $baseQuery = TaskDashboardFilters::apply(Task::query()->visibleTo(auth()->user()), $filters);
+        $activeTasksQuery = TaskDashboardFilters::apply(
+            Task::query()->visibleTo(auth()->user())->where('status', '!=', 'Completada'),
+            $filters
+        );
         $today = now()->startOfDay();
         $baseUrl = TaskResourceUrl::filtered($filters ?? []);
 
