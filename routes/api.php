@@ -35,5 +35,6 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/incidents', [TaskController::class, 'store']);
+    Route::post('/profile/image', [UserController::class, 'updateProfileImage']);
     Route::post('/logout', [AuthController::class, 'logout']);
 });

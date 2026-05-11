@@ -40,6 +40,8 @@ class AuthController extends Controller
         ], 403);
     }
 
+    $user->load(['carrera.facultad', 'roles']);
+
     $token = $user->createToken('auth_token')->plainTextToken;
 
     return response()->json([
@@ -67,6 +69,7 @@ class AuthController extends Controller
         $validateData['password']= Hash::make(value: $request->password);
 
         $user = User::create($validateData);
+        $user->load(['carrera.facultad', 'roles']);
 
         $token = $user->createToken('myapptoken')->plainTextToken;
 

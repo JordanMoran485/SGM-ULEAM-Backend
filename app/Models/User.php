@@ -36,6 +36,7 @@ class User extends Authenticatable implements FilamentUser
         'lastname',
         'email',
         'carrera_id',
+        'profile_photo_path',
         'password',
         'active_state',
     ];
@@ -48,6 +49,10 @@ class User extends Authenticatable implements FilamentUser
     protected $hidden = [
         'password',
         'remember_token',
+    ];
+
+    protected $appends = [
+        'profile_photo_url',
     ];
 
     /**
@@ -187,5 +192,14 @@ class User extends Authenticatable implements FilamentUser
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
+    }
+
+    public function getProfilePhotoUrlAttribute(): ?string
+    {
+        if (! $this->profile_photo_path) {
+            return null;
+        }
+
+        return 'storage/' . ltrim($this->profile_photo_path, '/');
     }
 }
