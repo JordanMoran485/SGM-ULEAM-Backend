@@ -12,6 +12,7 @@ class Task extends Model
         'title',
         'description',
         'user_id',
+        'image',
         'status',
         'priority',
         'location',

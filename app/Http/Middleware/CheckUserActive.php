@@ -23,6 +23,17 @@ class CheckUserActive
         }
 
         if (method_exists($user, 'getSystemAccessDenialMessage')) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                if (! $user->active_state) {
+                    $this->disconnect($request);
+                    return response()->json([
+                        'message' => 'Tu cuenta se encuentra desactivada. Contacta al administrador.',
+                    ], 403);
+                }
+
+                return $next($request);
+            }
+
             $message = $user->getSystemAccessDenialMessage();
 
             if (! $message) {
