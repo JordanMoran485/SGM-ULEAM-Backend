@@ -11,6 +11,7 @@ class Task extends Model
     protected $fillable = [
         'title',
         'description',
+        'incident_id',
         'user_id',
         'image',
         'status',
@@ -92,5 +93,10 @@ class Task extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function incident(): BelongsTo
+    {
+        return $this->belongsTo(Incident::class);
     }
 }

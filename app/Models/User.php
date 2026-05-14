@@ -194,6 +194,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Task::class);
     }
 
+    public function incidents(): HasMany
+    {
+        return $this->hasMany(Incident::class);
+    }
+
     public function getProfilePhotoUrlAttribute(): ?string
     {
         if (! $this->profile_photo_path) {
