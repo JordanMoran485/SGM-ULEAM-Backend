@@ -3,6 +3,8 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Widgets\ConserjeWorkloadWidget;
+use App\Filament\Widgets\CleaningFrequencyByLocationChart;
+use App\Filament\Widgets\CleaningLocationSummaryTable;
 use App\Filament\Widgets\TaskAlertsWidget;
 use App\Filament\Widgets\TaskOverviewStats;
 use App\Filament\Widgets\TaskStatusPriorityChart;
@@ -32,6 +34,8 @@ class Dashboard extends BaseDashboard
         return [
             TaskOverviewStats::class,
             TaskStatusPriorityChart::class,
+            CleaningFrequencyByLocationChart::class,
+            CleaningLocationSummaryTable::class,
             TodayTasksWidget::class,
             TaskAlertsWidget::class,
             ConserjeWorkloadWidget::class,
