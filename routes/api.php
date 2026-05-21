@@ -12,7 +12,7 @@ Route::get('/users', [UserController::class, 'index']);
 Route::get('/facultades', function () {
     return response()->json(
         Facultad::query()
-            ->select('id', 'name')
+            ->select('id', 'code', 'name')
             ->orderBy('name')
             ->get()
     );

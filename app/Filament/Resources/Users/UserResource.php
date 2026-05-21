@@ -66,11 +66,16 @@ class UserResource extends Resource
                         if ($user?->isSupervisor() && $user->facultad_id) {
                             return Facultad::query()
                                 ->whereKey($user->facultad_id)
-                                ->pluck('name', 'id')
+                                ->get()
+                                ->mapWithKeys(fn (Facultad $facultad): array => [$facultad->id => $facultad->display_name])
                                 ->all();
                         }
 
-                        return Facultad::query()->orderBy('name')->pluck('name', 'id')->all();
+                        return Facultad::query()
+                            ->orderBy('name')
+                            ->get()
+                            ->mapWithKeys(fn (Facultad $facultad): array => [$facultad->id => $facultad->display_name])
+                            ->all();
                     })
                     ->afterStateHydrated(function (Select $component, ?User $record): void {
                         $component->state($record?->facultad_id ?? auth()->user()?->facultad_id);
@@ -163,6 +168,7 @@ class UserResource extends Resource
                     ->placeholder('-'),
                 TextEntry::make('facultad.name')
                     ->label('Facultad')
+                    ->formatStateUsing(fn ($state, User $record): string => $record->facultad?->display_name ?? $state ?? '-')
                     ->placeholder('-'),
                 TextEntry::make('email')
                     ->label('Correo institucional')
@@ -199,7 +205,8 @@ class UserResource extends Resource
                     ->searchable()
                     ->label('Apellido'),
                 TextColumn::make('facultad.name')
-                    ->searchable()
+                    ->formatStateUsing(fn ($state, User $record): string => $record->facultad?->display_name ?? $state ?? '-')
+                    ->searchable(['name', 'code'])
                     ->sortable()
                     ->label('Facultad'),
                 TextColumn::make('email')
