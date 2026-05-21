@@ -99,6 +99,10 @@ class UserResource extends Resource
                 TextInput::make('email')
                     ->label('Correo institucional')
                     ->email()
+                    ->rule('regex:/^[A-Za-z0-9._%+-]+@live\.uleam\.edu\.ec$/i')
+                    ->validationMessages([
+                        'regex' => 'El correo debe pertenecer al dominio @live.uleam.edu.ec.',
+                    ])
                     ->required()
                     ->maxLength(30),
                 TextInput::make('password')

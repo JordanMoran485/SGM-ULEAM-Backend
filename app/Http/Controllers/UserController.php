@@ -33,7 +33,13 @@ class UserController extends Controller
 
             'name'=>'required|string|max:15',
             'lastname'=> 'required|string|max:15',
-            'email'=> 'required|email|max:255|unique:users,email',
+            'email'=> [
+                'required',
+                'email',
+                'max:255',
+                'unique:users,email',
+                'regex:/^[A-Za-z0-9._%+-]+@live\.uleam\.edu\.ec$/i',
+            ],
             'carrera_id'=> 'required|exists:carreras,id',
             'password'=> 'required|string|max:15',
             'active_state'=> 'required|boolean',
