@@ -15,6 +15,5 @@ return [
         'name'     => 'nombre',
         'lastname' => 'apellido',
         'facultad' => 'facultad',
-        'carrera'  => 'carrera',
     ],
 ];

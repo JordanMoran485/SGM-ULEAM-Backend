@@ -40,11 +40,10 @@ class UserController extends Controller
                 'unique:users,email',
                 'regex:/^[A-Za-z0-9._%+-]+@live\.uleam\.edu\.ec$/i',
             ],
-            'carrera_id'=> 'required|exists:carreras,id',
+            'facultad_id'=> 'required|exists:facultades,id',
             'password'=> 'required|string|max:15',
             'active_state'=> 'required|boolean',
         ]);
-        
 
         $user = User::create($validateData);
         return response()->json($user,200);
@@ -72,7 +71,7 @@ class UserController extends Controller
 
         $user->profile_photo_path = $path;
         $user->save();
-        $user->refresh()->load(['carrera.facultad', 'roles']);
+        $user->refresh()->load(['facultad', 'roles']);
 
         return response()->json([
             'message' => 'Imagen actualizada',
@@ -80,4 +79,5 @@ class UserController extends Controller
             'url' => $user->profile_photo_url,
         ]);
     }
+
 }

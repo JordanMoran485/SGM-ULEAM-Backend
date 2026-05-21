@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Users;
 
 use App\Filament\Resources\Users\Pages\ManageUsers;
-use App\Models\Carrera;
 use App\Models\Facultad;
 use App\Models\User;
 use BackedEnum;
@@ -73,28 +72,11 @@ class UserResource extends Resource
 
                         return Facultad::query()->orderBy('name')->pluck('name', 'id')->all();
                     })
-                    ->dehydrated(false)
                     ->afterStateHydrated(function (Select $component, ?User $record): void {
                         $component->state($record?->facultad_id ?? auth()->user()?->facultad_id);
                     })
                     ->disabled(fn (): bool => auth()->user()?->isSupervisor() ?? false)
                     ->live()
-                    ->afterStateUpdated(fn (callable $set) => $set('carrera_id', null))
-                    ->required(),
-                Select::make('carrera_id')
-                    ->label('Carrera')
-                    ->options(function (callable $get) {
-                        $facultadId = $get('facultad_id');
-
-                        if (! $facultadId) {
-                            return [];
-                        }
-
-                        return Carrera::query()
-                            ->where('facultad_id', $facultadId)
-                            ->orderBy('name')
-                            ->pluck('name', 'id');
-                    })
                     ->required(),
                 TextInput::make('email')
                     ->label('Correo institucional')
@@ -147,10 +129,7 @@ class UserResource extends Resource
                             $supervisorExists = User::query()
                                 ->when($record, fn (Builder $query): Builder => $query->whereKeyNot($record->getKey()))
                                 ->role('supervisor')
-                                ->whereHas(
-                                    'carrera',
-                                    fn (Builder $query): Builder => $query->where('facultad_id', $facultadId)
-                                )
+                                ->where('facultad_id', $facultadId)
                                 ->exists();
 
                             if ($supervisorExists) {
@@ -182,11 +161,8 @@ class UserResource extends Resource
                 TextEntry::make('lastname')
                     ->label('Apellido')
                     ->placeholder('-'),
-                TextEntry::make('carrera.facultad.name')
+                TextEntry::make('facultad.name')
                     ->label('Facultad')
-                    ->placeholder('-'),
-                TextEntry::make('carrera.name')
-                    ->label('Carrera')
                     ->placeholder('-'),
                 TextEntry::make('email')
                     ->label('Correo institucional')
@@ -222,14 +198,10 @@ class UserResource extends Resource
                 TextColumn::make('lastname')
                     ->searchable()
                     ->label('Apellido'),
-                TextColumn::make('carrera.facultad.name')
+                TextColumn::make('facultad.name')
                     ->searchable()
                     ->sortable()
                     ->label('Facultad'),
-                TextColumn::make('carrera.name')
-                    ->searchable()
-                    ->sortable()
-                    ->label('Carrera'),
                 TextColumn::make('email')
                     ->label('Correo institucional')
                     ->searchable(),
@@ -269,7 +241,7 @@ class UserResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()
-            ->with(['carrera.facultad', 'roles'])
+            ->with(['facultad', 'roles'])
             ->whereHas('roles', fn (Builder $query): Builder => $query->whereIn('name', ['super_admin', 'supervisor', 'conserje']));
 
         $user = auth()->user();

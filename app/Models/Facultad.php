@@ -10,7 +10,4 @@ class Facultad extends Model
     //
     protected $fillable = ['name'];
     protected $table = 'facultades';
-    public function carreras() { 
-        
-    return $this->hasMany(Carrera::class); }
 }

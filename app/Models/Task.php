@@ -78,7 +78,7 @@ class Task extends Model
             }
 
             return $query->whereHas(
-                'user.carrera',
+                'user',
                 fn (Builder $userQuery): Builder => $userQuery->where('facultad_id', $facultadId)
             );
         }

@@ -6,8 +6,6 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
-use Laravel\Sanctum\HasApiTokens;
 
 
 
@@ -40,7 +38,7 @@ class AuthController extends Controller
         ], 403);
     }
 
-    $user->load(['carrera.facultad', 'roles']);
+    $user->load(['facultad', 'roles']);
 
     $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -65,17 +63,15 @@ class AuthController extends Controller
                 'unique:users,email',
                 'regex:/^[A-Za-z0-9._%+-]+@live\.uleam\.edu\.ec$/i',
             ],
-            'carrera_id'=> 'required|exists:carreras,id',
+            'facultad_id'=> 'required|exists:facultades,id',
             'password'=> 'required|string|max:15',
             'active_state' => 'nullable|boolean',
         ]);
 
-      
-
         $validateData['password']= Hash::make(value: $request->password);
 
         $user = User::create($validateData);
-        $user->load(['carrera.facultad', 'roles']);
+        $user->load(['facultad', 'roles']);
 
         $token = $user->createToken('myapptoken')->plainTextToken;
 
@@ -85,7 +81,6 @@ class AuthController extends Controller
             'token' => $token
         ], 201);
     }
-
 
     public function logout(Request $request) {
     // 1. Obtenemos el token que el usuario está usando actualmente y lo borramos

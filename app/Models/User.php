@@ -35,7 +35,7 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'lastname',
         'email',
-        'carrera_id',
+        'facultad_id',
         'profile_photo_path',
         'password',
         'active_state',
@@ -82,7 +82,7 @@ class User extends Authenticatable implements FilamentUser
         $viewer ??= auth()->user();
 
         $query = static::query()
-            ->with('carrera.facultad')
+            ->with('facultad')
             ->where('active_state', true);
         $guardName = (new static())->getDefaultGuardName();
 
@@ -110,10 +110,7 @@ class User extends Authenticatable implements FilamentUser
                 return $query->whereRaw('1 = 0');
             }
 
-            return $query->whereHas(
-                'carrera',
-                fn (Builder $careerQuery): Builder => $careerQuery->where('facultad_id', $facultadId)
-            );
+            return $query->where('facultad_id', $facultadId);
         }
 
         return $query->whereKey($viewer->getKey());
@@ -157,15 +154,9 @@ class User extends Authenticatable implements FilamentUser
         return null;
     }
 
-
-    public function carrera(): BelongsTo
+    public function facultad(): BelongsTo
     {
-        return $this->belongsTo(Carrera::class);
-    }
-
-    public function getFacultadIdAttribute(): ?int
-    {
-        return $this->carrera?->facultad_id;
+        return $this->belongsTo(Facultad::class);
     }
 
     public function belongsToFacultad(?int $facultadId): bool

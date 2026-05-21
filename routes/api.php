@@ -4,7 +4,6 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\IncidentsController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
-use App\Models\Carrera;
 use App\Models\Facultad;
 use Illuminate\Support\Facades\Route;
 
@@ -14,15 +13,6 @@ Route::get('/facultades', function () {
     return response()->json(
         Facultad::query()
             ->select('id', 'name')
-            ->orderBy('name')
-            ->get()
-    );
-});
-
-Route::get('/carreras', function () {
-    return response()->json(
-        Carrera::query()
-            ->select('id', 'name', 'facultad_id')
             ->orderBy('name')
             ->get()
     );
