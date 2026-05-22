@@ -36,9 +36,10 @@ class TaskOverviewStats extends StatsOverviewWidget
         $completedTasks = (clone $baseQuery)->where('status', 'Completada')->count();
         $overdueTasks = (clone $activeTasksQuery)->whereDate('due_date', '<', $today)->count();
         $highPriorityTasks = (clone $activeTasksQuery)->where('priority', 'Alta')->count();
+        $conserjesQuery = User::queryConserjes(tipoConserje: $filters['tipo_conserje'] ?? null);
         $activeConserjes = filled($filters['user_id'] ?? null)
-            ? User::queryConserjes()->whereKey($filters['user_id'])->count()
-            : User::queryConserjes()->count();
+            ? (clone $conserjesQuery)->whereKey($filters['user_id'])->count()
+            : $conserjesQuery->count();
 
         return [
             Stat::make('Tareas totales', $totalTasks)

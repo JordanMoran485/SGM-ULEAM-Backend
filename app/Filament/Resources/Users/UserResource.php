@@ -20,6 +20,8 @@ use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\ImageColumn;
@@ -112,6 +114,7 @@ class UserResource extends Resource
                     )
                     ->preload()
                     ->searchable()
+                    ->live()
                     ->label('Rol de Usuario')
                     ->required()
                     ->rule(function (callable $get, ?User $record) {
@@ -141,7 +144,31 @@ class UserResource extends Resource
                                 $fail('Ya existe un supervisor asignado para esta facultad.');
                             }
                         };
+                    })
+                    ->afterStateUpdated(function (Set $set, $state): void {
+                        $roleId = is_array($state) ? reset($state) : $state;
+                        $roleName = Role::query()->find($roleId)?->name;
+
+                        if ($roleName !== 'conserje') {
+                            $set('tipo_conserje', null);
+                        }
                     }),
+                Select::make('tipo_conserje')
+                    ->label('Tipo de conserje')
+                    ->options(User::conserjeTypeOptions())
+                    ->visible(function (Get $get): bool {
+                        $roleId = $get('roles');
+                        $roleId = is_array($roleId) ? reset($roleId) : $roleId;
+
+                        return Role::query()->find($roleId)?->name === 'conserje';
+                    })
+                    ->required(function (Get $get): bool {
+                        $roleId = $get('roles');
+                        $roleId = is_array($roleId) ? reset($roleId) : $roleId;
+
+                        return Role::query()->find($roleId)?->name === 'conserje';
+                    })
+                    ->native(false),
                 Toggle::make('active_state')
                     ->label('Estado de cuenta')
                     ->onIcon('heroicon-m-check-circle')
@@ -175,6 +202,10 @@ class UserResource extends Resource
                     ->placeholder('-'),
                 TextEntry::make('roles.name')
                     ->label('Rol de Usuario'),
+                TextEntry::make('tipo_conserje')
+                    ->label('Tipo de conserje')
+                    ->formatStateUsing(fn (?string $state): string => User::conserjeTypeOptions()[$state] ?? '-')
+                    ->placeholder('-'),
                 IconEntry::make('active_state')
                     ->boolean()
                     ->placeholder('-')
@@ -215,6 +246,15 @@ class UserResource extends Resource
                 TextColumn::make('roles.name')
                     ->label('Rol Usuario')
                     ->searchable(),
+                TextColumn::make('tipo_conserje')
+                    ->label('Tipo de conserje')
+                    ->formatStateUsing(fn (?string $state): string => User::conserjeTypeOptions()[$state] ?? '-')
+                    ->badge()
+                    ->color(fn (?string $state): string => match ($state) {
+                        'uleam' => 'info',
+                        'ep' => 'warning',
+                        default => 'gray',
+                    }),
                 IconColumn::make('active_state')
                     ->boolean()
                     ->label('Estado'),

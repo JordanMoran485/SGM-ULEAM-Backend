@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Models\Task;
 use App\Models\User;
+use App\Support\TaskDashboardFilters;
 use Filament\Forms;
 use Filament\Schemas\Schema;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
@@ -168,33 +169,10 @@ class TasksCalendarWidget extends FullCalendarWidget
 
     protected function getFilteredTaskQuery(): Builder
     {
-        $query = Task::query()
+        return Task::query()
             ->visibleTo(auth()->user())
-            ->whereNotNull('start_at');
-
-        $filters = $this->pageFilters ?? [];
-
-        if (filled($filters['user_id'] ?? null)) {
-            $query->where('user_id', $filters['user_id']);
-        }
-
-        if (filled($filters['status'] ?? null)) {
-            $query->where('status', $filters['status']);
-        }
-
-        if (filled($filters['priority'] ?? null)) {
-            $query->where('priority', $filters['priority']);
-        }
-
-        if (filled($filters['from'] ?? null)) {
-            $query->whereDate('start_at', '>=', $filters['from']);
-        }
-
-        if (filled($filters['until'] ?? null)) {
-            $query->whereDate('start_at', '<=', $filters['until']);
-        }
-
-        return $query;
+            ->whereNotNull('start_at')
+            ->tap(fn (Builder $query): Builder => TaskDashboardFilters::apply($query, $this->pageFilters ?? [], 'start_at'));
     }
 
     protected function formatEventTitle(Task $task): string

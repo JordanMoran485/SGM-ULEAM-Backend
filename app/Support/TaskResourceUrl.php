@@ -15,6 +15,10 @@ class TaskResourceUrl
             $tableFilters['user_id'] = ['value' => (string) $filters['user_id']];
         }
 
+        if (filled($filters['tipo_conserje'] ?? null)) {
+            $tableFilters['tipo_conserje'] = ['value' => $filters['tipo_conserje']];
+        }
+
         if (filled($filters['status'] ?? null)) {
             $tableFilters['status'] = ['value' => $filters['status']];
         }

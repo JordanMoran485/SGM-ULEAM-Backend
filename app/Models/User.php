@@ -26,6 +26,11 @@ class User extends Authenticatable implements FilamentUser
         'supervisor',
     ];
 
+    public const CONSERJE_TYPES = [
+        'uleam' => 'Uleam',
+        'ep' => 'Empresa Publica EP',
+    ];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -39,6 +44,7 @@ class User extends Authenticatable implements FilamentUser
         'profile_photo_path',
         'password',
         'active_state',
+        'tipo_conserje',
     ];
 
     /**
@@ -65,19 +71,25 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'active_state' => 'boolean',
         ];
     }
 
-    public static function conserjeOptions(): array
+    public static function conserjeTypeOptions(): array
     {
-        return static::queryConserjes()
+        return self::CONSERJE_TYPES;
+    }
+
+    public static function conserjeOptions(?self $viewer = null, ?string $tipoConserje = null): array
+    {
+        return static::queryConserjes($viewer, $tipoConserje)
             ->orderBy('name')
             ->get()
-            ->mapWithKeys(fn (self $user): array => [$user->id => "{$user->name} {$user->lastname}"])
+            ->mapWithKeys(fn (self $user): array => [$user->id => $user->getDisplayNameWithConserjeType()])
             ->all();
     }
 
-    public static function queryConserjes(?self $viewer = null): Builder
+    public static function queryConserjes(?self $viewer = null, ?string $tipoConserje = null): Builder
     {
         $viewer ??= auth()->user();
 
@@ -90,7 +102,30 @@ class User extends Authenticatable implements FilamentUser
             $query->role('conserje');
         }
 
+        if (filled($tipoConserje)) {
+            $query->where('tipo_conserje', $tipoConserje);
+        }
+
         return $query->visibleTo($viewer);
+    }
+
+    public function getFullNameAttribute(): string
+    {
+        return trim("{$this->name} {$this->lastname}");
+    }
+
+    public function getConserjeTypeLabel(): ?string
+    {
+        return self::CONSERJE_TYPES[$this->tipo_conserje] ?? null;
+    }
+
+    public function getDisplayNameWithConserjeType(): string
+    {
+        $typeLabel = $this->getConserjeTypeLabel();
+
+        return $typeLabel
+            ? "{$this->full_name} ({$typeLabel})"
+            : $this->full_name;
     }
 
     public function scopeVisibleTo(Builder $query, ?self $viewer): Builder

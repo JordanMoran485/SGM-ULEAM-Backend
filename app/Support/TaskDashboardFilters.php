@@ -14,6 +14,10 @@ class TaskDashboardFilters
             $query->where('user_id', $filters['user_id']);
         }
 
+        if (filled($filters['tipo_conserje'] ?? null)) {
+            $query->whereHas('user', fn (Builder $userQuery): Builder => $userQuery->where('tipo_conserje', $filters['tipo_conserje']));
+        }
+
         if (filled($filters['status'] ?? null)) {
             $query->where('status', $filters['status']);
         }

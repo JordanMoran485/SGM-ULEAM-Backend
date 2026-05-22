@@ -62,7 +62,7 @@ class ConserjeWorkloadWidget extends TableWidget
     {
         $filters = $this->pageFilters ?? [];
 
-        $query = User::queryConserjes()
+        $query = User::queryConserjes(tipoConserje: $filters['tipo_conserje'] ?? null)
             ->withCount([
                 'tasks as pending_tasks_count' => fn (Builder $query): Builder => TaskDashboardFilters::apply($query, $filters)->where('status', 'Pendiente'),
                 'tasks as in_progress_tasks_count' => fn (Builder $query): Builder => TaskDashboardFilters::apply($query, $filters)->where('status', 'En Proceso'),

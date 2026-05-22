@@ -8,6 +8,8 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Pages\Dashboard;
 use Filament\Pages\Dashboard\Concerns\HasFiltersForm;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 
@@ -45,9 +47,15 @@ class TasksCalendar extends Dashboard
     public function filtersForm(Schema $schema): Schema
     {
         return $schema->components([
+            Select::make('tipo_conserje')
+                ->label('Tipo de conserje')
+                ->options(User::conserjeTypeOptions())
+                ->native(false)
+                ->afterStateUpdated(fn (Set $set): mixed => $set('user_id', null))
+                ->live(),
             Select::make('user_id')
                 ->label('Conserje')
-                ->options(fn (): array => User::conserjeOptions())
+                ->options(fn (Get $get): array => User::conserjeOptions(tipoConserje: $get('tipo_conserje')))
                 ->searchable()
                 ->preload(),
             Select::make('status')

@@ -127,6 +127,7 @@ class TaskResource extends Resource
                     ->columnSpanFull(),
                 TextEntry::make('user.name')
                     ->label('Conserje')
+                    ->formatStateUsing(fn ($state, Task $record): string => $record->user?->getDisplayNameWithConserjeType() ?? '-')
                     ->placeholder('-'),
                 TextEntry::make('status')
                     ->label('Estado')
@@ -182,6 +183,7 @@ class TaskResource extends Resource
                     ->searchable(),
                 TextColumn::make('user.name')
                     ->label('Conserje')
+                    ->formatStateUsing(fn ($state, Task $record): string => $record->user?->getDisplayNameWithConserjeType() ?? '-')
                     ->searchable(),
                 TextColumn::make('status')
                     ->label('Estado')
@@ -236,6 +238,21 @@ class TaskResource extends Resource
                 SelectFilter::make('user_id')
                     ->label('Conserje')
                     ->options(fn (): array => User::conserjeOptions()),
+                SelectFilter::make('tipo_conserje')
+                    ->label('Tipo de conserje')
+                    ->options(User::conserjeTypeOptions())
+                    ->query(function (Builder $query, array $data): Builder {
+                        $value = $data['value'] ?? null;
+
+                        if (! filled($value)) {
+                            return $query;
+                        }
+
+                        return $query->whereHas(
+                            'user',
+                            fn (Builder $userQuery): Builder => $userQuery->where('tipo_conserje', $value)
+                        );
+                    }),
                 Filter::make('schedule')
                     ->label('Rango de fechas')
                     ->schema([
