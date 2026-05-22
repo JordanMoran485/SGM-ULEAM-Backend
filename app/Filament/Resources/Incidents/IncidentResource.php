@@ -5,7 +5,6 @@ namespace App\Filament\Resources\Incidents;
 use App\Filament\Resources\Incidents\Pages\ManageIncidents;
 use App\Models\Incident;
 use App\Models\Task;
-use App\Models\User;
 use App\Notifications\IncidentAssignedNotification;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -13,12 +12,10 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
@@ -240,38 +237,34 @@ class IncidentResource extends Resource
                 ViewAction::make(),
                 EditAction::make(),
                 Action::make('approve')
-                    ->label('Aprobar y asignar')
+                    ->label('Aprobar y notificar')
                     ->icon(Heroicon::OutlinedCheckCircle)
                     ->color('success')
                     ->visible(fn (Incident $record): bool => $record->review_status !== 'Aceptada')
                     ->form([
-                        Select::make('user_id')
-                            ->label('Conserje encargado')
-                            ->options(fn (): array => User::conserjeOptions())
+                        Select::make('task_id')
+                            ->label('Tarea existente a notificar')
+                            ->options(function (Incident $record): array {
+                                return Task::query()
+                                    ->with('user')
+                                    ->visibleTo(auth()->user())
+                                    ->whereNull('incident_id')
+                                    ->whereNotNull('user_id')
+                                    ->where('status', '!=', 'Completada')
+                                    ->orderBy('start_at')
+                                    ->orderBy('location')
+                                    ->get()
+                                    ->mapWithKeys(function (Task $task): array {
+                                        $conserje = trim(($task->user?->name ?? '') . ' ' . ($task->user?->lastname ?? ''));
+                                        $schedule = $task->start_at?->format('d/m/Y H:i') ?? 'Sin fecha';
+                                        $label = "{$task->title} | {$task->location} | {$conserje} | {$schedule}";
+
+                                        return [$task->id => $label];
+                                    })
+                                    ->all();
+                            })
                             ->searchable()
                             ->preload()
-                            ->required(),
-                        Toggle::make('all_day')
-                            ->label('Todo el dia')
-                            ->default(true)
-                            ->required(),
-                        DateTimePicker::make('start_at')
-                            ->label('Inicio')
-                            ->native(false)
-                            ->seconds(false)
-                            ->required(),
-                        DateTimePicker::make('end_at')
-                            ->label('Fin')
-                            ->native(false)
-                            ->seconds(false),
-                        Select::make('priority')
-                            ->label('Prioridad')
-                            ->options([
-                                'Baja' => 'Baja',
-                                'Media' => 'Media',
-                                'Alta' => 'Alta',
-                            ])
-                            ->default(fn (Incident $record): string => $record->priority)
                             ->required(),
                         Textarea::make('review_notes')
                             ->label('Observaciones para el conserje')
@@ -279,22 +272,18 @@ class IncidentResource extends Resource
                             ->maxLength(1000),
                     ])
                     ->action(function (Incident $record, array $data): void {
-                        $task = Task::create([
+                        $task = Task::query()
+                            ->with('user')
+                            ->visibleTo(auth()->user())
+                            ->whereNull('incident_id')
+                            ->findOrFail($data['task_id']);
+
+                        $task->update([
                             'incident_id' => $record->getKey(),
-                            'title' => $record->title,
-                            'description' => $data['review_notes'] ?: $record->description,
-                            'user_id' => $data['user_id'],
-                            'image' => $record->image,
-                            'status' => 'Pendiente',
-                            'priority' => $data['priority'],
-                            'location' => $record->location,
-                            'all_day' => $data['all_day'],
-                            'start_at' => $data['start_at'],
-                            'end_at' => $data['end_at'] ?? null,
                         ]);
 
                         $record->update([
-                            'status' => 'En Proceso',
+                            'status' => $task->status === 'Completada' ? 'Completada' : 'Pendiente',
                             'review_status' => 'Aceptada',
                             'review_notes' => $data['review_notes'] ?: null,
                             'reviewed_at' => now(),
@@ -304,7 +293,7 @@ class IncidentResource extends Resource
                         $task->user?->notify(new IncidentAssignedNotification($record->fresh(), $task));
 
                         Notification::make()
-                            ->title('Incidencia aprobada y tarea asignada')
+                            ->title('Incidencia aprobada y conserje notificado')
                             ->success()
                             ->send();
                     }),

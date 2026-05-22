@@ -24,8 +24,8 @@ class IncidentAssignedNotification extends Notification
     public function toDatabase(object $notifiable): array
     {
         return [
-            'title' => 'Nueva tarea asignada',
-            'body' => "El supervisor aprobó la incidencia \"{$this->incident->title}\" y te asignó la tarea.",
+            'title' => 'Área pendiente de limpieza',
+            'body' => "El supervisor aprobó la incidencia \"{$this->incident->title}\". Debes atender el área reportada.",
             'incident_id' => $this->incident->getKey(),
             'task_id' => $this->task->getKey(),
             'location' => $this->incident->location,
