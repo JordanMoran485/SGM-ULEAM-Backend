@@ -24,6 +24,7 @@ Route::post('/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/tasks', [TaskController::class, 'index']);
+    Route::patch('/tasks/{id}', [TaskController::class, 'update']);
     Route::get('/incidents', [IncidentsController::class, 'index']);
     Route::post('/incidents', [IncidentsController::class, 'store']);
     Route::get('/notifications', [NotificationsController::class, 'index']);
