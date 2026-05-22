@@ -33,6 +33,7 @@ class AdminPanelProvider extends PanelProvider
             ->login(Login::class)
             ->brandName('SGM - Uleam')
             ->globalSearch(false)
+            ->databaseNotifications()
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->colors([
                 'primary' => Color::Blue,

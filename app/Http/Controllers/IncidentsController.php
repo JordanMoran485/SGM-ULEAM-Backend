@@ -14,6 +14,7 @@ class IncidentsController extends Controller
             ->with([
                 'user:id,name,lastname',
                 'tasks.user:id,name,lastname',
+                'reviewer:id,name,lastname',
             ])
             ->visibleTo($request->user())
             ->latest()
@@ -52,6 +53,7 @@ class IncidentsController extends Controller
         $incident->load([
             'user:id,name,lastname',
             'tasks.user:id,name,lastname',
+            'reviewer:id,name,lastname',
         ]);
 
         return response()->json([

@@ -15,8 +15,16 @@ class Incident extends Model
         'user_id',
         'image',
         'status',
+        'review_status',
+        'review_notes',
+        'reviewed_at',
+        'reviewed_by',
         'priority',
         'location',
+    ];
+
+    protected $casts = [
+        'reviewed_at' => 'datetime',
     ];
 
     public function scopeVisibleTo(Builder $query, ?User $user): Builder
@@ -52,6 +60,11 @@ class Incident extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function reviewer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reviewed_by');
     }
 
     public function tasks(): HasMany
