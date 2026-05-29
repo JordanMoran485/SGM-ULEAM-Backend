@@ -130,18 +130,18 @@ class TasksCalendarWidget extends FullCalendarWidget
     {
         return [
             Actions\CreateAction::make()
-                ->mountUsing(function (Schema $schema, array $arguments): void {
+                ->fillForm(function (array $arguments): array {
                     $start = isset($arguments['start']) ? Carbon::parse($arguments['start']) : now();
                     $end = isset($arguments['end']) ? Carbon::parse($arguments['end']) : $start->copy()->addDay();
                     $allDay = $arguments['allDay'] ?? true;
 
-                    $schema->fill([
+                    return [
                         'start_at' => $allDay ? $start->copy()->startOfDay() : $start,
                         'end_at' => $allDay ? $start->copy()->addDay()->startOfDay() : $end,
                         'all_day' => $allDay,
                         'status' => 'Pendiente',
                         'priority' => 'Media',
-                    ]);
+                    ];
                 }),
         ];
     }
@@ -150,8 +150,8 @@ class TasksCalendarWidget extends FullCalendarWidget
     {
         return [
             Actions\EditAction::make()
-                ->mountUsing(function (Task $record, Schema $schema, array $arguments): void {
-                    $schema->fill([
+                ->fillForm(function (Task $record, array $arguments): array {
+                    return [
                         'title' => $record->title,
                         'description' => $record->description,
                         'user_id' => $record->user_id,
@@ -161,7 +161,7 @@ class TasksCalendarWidget extends FullCalendarWidget
                         'all_day' => $arguments['event']['allDay'] ?? $record->all_day,
                         'start_at' => $arguments['event']['start'] ?? $record->start_at,
                         'end_at' => $arguments['event']['end'] ?? $record->end_at,
-                    ]);
+                    ];
                 }),
             Actions\DeleteAction::make(),
         ];

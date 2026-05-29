@@ -44,6 +44,14 @@ class TasksCalendar extends Dashboard
         ];
     }
 
+    public function content(Schema $schema): Schema
+    {
+        return $schema->components([
+            $this->getFiltersFormContentComponent(),
+            $this->getWidgetsContentComponent(),
+        ]);
+    }
+
     public function filtersForm(Schema $schema): Schema
     {
         return $schema->components([

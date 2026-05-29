@@ -5,6 +5,157 @@
 @source '../../../../resources/views/filament/**/*';
 @source '../../../../vendor/saade/filament-fullcalendar/resources/views/**/*.blade.php';
 
+:root {
+    --sgm-loading-backdrop: rgba(255, 255, 255, 0.58);
+    --sgm-loading-panel-bg: rgba(15, 23, 42, 0.84);
+    --sgm-loading-panel-fg: rgb(248 250 252);
+    --sgm-loading-accent: rgb(59 130 246);
+    --sgm-loading-accent-soft: rgba(59, 130, 246, 0.22);
+}
+
+.sgm-loading-zone {
+    position: relative;
+}
+
+.sgm-loading-zone__overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    border-radius: 1rem;
+    background:
+        linear-gradient(180deg, rgba(59, 130, 246, 0.08), transparent 35%),
+        var(--sgm-loading-backdrop);
+    backdrop-filter: blur(4px);
+}
+
+.sgm-loading-zone__panel {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: min(20rem, 100%);
+    max-width: 24rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 1rem;
+    background: var(--sgm-loading-panel-bg);
+    color: var(--sgm-loading-panel-fg);
+    box-shadow: 0 16px 44px rgba(15, 23, 42, 0.2);
+}
+
+.sgm-loading-zone__pulse {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.sgm-loading-zone__pulse span {
+    width: 0.55rem;
+    height: 1.8rem;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #93c5fd 0%, var(--sgm-loading-accent) 100%);
+    box-shadow: 0 0 0 0.22rem var(--sgm-loading-accent-soft);
+    transform-origin: center bottom;
+    animation: sgm-loading-wave 0.9s ease-in-out infinite;
+}
+
+.sgm-loading-zone__pulse span:nth-child(2) {
+    animation-delay: 0.12s;
+}
+
+.sgm-loading-zone__pulse span:nth-child(3) {
+    animation-delay: 0.24s;
+}
+
+.sgm-loading-zone__copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+}
+
+.sgm-loading-zone__copy strong {
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.sgm-loading-zone__copy span {
+    font-size: 0.8rem;
+    color: rgba(226, 232, 240, 0.82);
+}
+
+.sgm-loading-zone__content {
+    position: relative;
+    transition: opacity 140ms ease, filter 140ms ease;
+}
+
+.sgm-loading-zone__content--loading {
+    opacity: 0.72;
+    filter: saturate(0.88);
+}
+
+.sgm-loading-zone__content--loading .fi-wi-widget,
+.sgm-loading-zone__content--loading .fi-section,
+.sgm-loading-zone__content--loading .fi-ta,
+.sgm-loading-zone__content--loading .filament-fullcalendar {
+    position: relative;
+    overflow: hidden;
+}
+
+.sgm-loading-zone__content--loading .fi-wi-widget::after,
+.sgm-loading-zone__content--loading .fi-section::after,
+.sgm-loading-zone__content--loading .fi-ta::after,
+.sgm-loading-zone__content--loading .filament-fullcalendar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(115deg, transparent 18%, rgba(255, 255, 255, 0.28) 50%, transparent 82%),
+        rgba(241, 245, 249, 0.1);
+    transform: translateX(-100%);
+    animation: sgm-loading-shimmer 1.15s linear infinite;
+    pointer-events: none;
+}
+
+html.dark {
+    --sgm-loading-backdrop: rgba(2, 6, 23, 0.34);
+    --sgm-loading-panel-bg: rgba(2, 6, 23, 0.92);
+    --sgm-loading-panel-fg: rgb(241 245 249);
+    --sgm-loading-accent-soft: rgba(96, 165, 250, 0.2);
+}
+
+html.dark .sgm-loading-zone__content--loading .fi-wi-widget::after,
+html.dark .sgm-loading-zone__content--loading .fi-section::after,
+html.dark .sgm-loading-zone__content--loading .fi-ta::after,
+html.dark .sgm-loading-zone__content--loading .filament-fullcalendar::after {
+    background:
+        linear-gradient(115deg, transparent 18%, rgba(148, 163, 184, 0.22) 50%, transparent 82%),
+        rgba(15, 23, 42, 0.14);
+}
+
+@keyframes sgm-loading-wave {
+    0%,
+    100% {
+        transform: scaleY(0.48);
+        opacity: 0.72;
+    }
+
+    50% {
+        transform: scaleY(1);
+        opacity: 1;
+    }
+}
+
+@keyframes sgm-loading-shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
 html.dark .filament-fullcalendar {
     --fc-page-bg-color: rgb(17 24 39);
     --fc-neutral-bg-color: rgb(31 41 55);
