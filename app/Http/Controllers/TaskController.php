@@ -47,9 +47,9 @@ class TaskController extends Controller
             'title' => $validatedData['title'],
             'description' => $validatedData['description'],
             'location' => $validatedData['location'],
-            'status' => $this->normalizeStatus($validatedData['status'] ?? null),
+            'status'   => $this->normalizeStatus($validatedData['status'] ?? null),
             'priority' => $this->normalizePriority($validatedData['priority'] ?? null),
-            'user_id' => $request->user()->getKey(),
+            'user_id'  => $request->user()->getKey(),
             'image' => $imagePath,
             'all_day' => true,
         ]);

@@ -21,7 +21,6 @@ class Incident extends Model
         'reviewed_by',
         'priority',
         'location',
-        'category',
     ];
 
     protected $casts = [
