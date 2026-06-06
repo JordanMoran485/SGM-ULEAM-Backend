@@ -33,21 +33,23 @@ class IncidentsController extends Controller
             'location' => 'required|string|max:255',
             'status' => 'nullable|in:Pendiente,En Proceso,Completada,pending,in_progress,completed',
             'priority' => 'nullable|in:Baja,Media,Alta,Low,Medium,High',
-            'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
-            'photo' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
+            'category' => 'nullable|string|max:100',
+            'image'    => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
+            'photo'    => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
         ]);
 
         $imageFile = $request->file('image') ?? $request->file('photo');
         $imagePath = $imageFile?->store('incidents', 'public');
 
         $incident = Incident::create([
-            'title' => $validatedData['title'],
+            'title'       => $validatedData['title'],
             'description' => $validatedData['description'],
-            'location' => $validatedData['location'],
-            'status' => $this->normalizeStatus($validatedData['status'] ?? null),
-            'priority' => $this->normalizePriority($validatedData['priority'] ?? null),
-            'user_id' => $request->user()->getKey(),
-            'image' => $imagePath,
+            'location'    => $validatedData['location'],
+            'status'      => $this->normalizeStatus($validatedData['status'] ?? null),
+            'priority'    => $this->normalizePriority($validatedData['priority'] ?? null),
+            'category'    => $validatedData['category'] ?? null,
+            'user_id'     => $request->user()->getKey(),
+            'image'       => $imagePath,
         ]);
 
         $incident->load([

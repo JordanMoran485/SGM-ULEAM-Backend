@@ -13,17 +13,14 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
-use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Columns\TextColumn;
@@ -52,14 +49,6 @@ class TaskResource extends Resource
                     ->label('Descripcion')
                     ->rows(4)
                     ->maxLength(1000)
-                    ->columnSpanFull(),
-                FileUpload::make('image')
-                    ->label('Imagen de la incidencia')
-                    ->image()
-                    ->disk('public')
-                    ->directory('incidents')
-                    ->imageEditor()
-                    ->visibility('public')
                     ->columnSpanFull(),
                 Select::make('user_id')
                     ->label('Asignar a conserje')
@@ -113,12 +102,6 @@ class TaskResource extends Resource
     {
         return $schema
             ->components([
-                ImageEntry::make('image')
-                    ->label('Imagen de la incidencia')
-                    ->disk('public')
-                    ->visibility('public')
-                    ->height(320)
-                    ->columnSpanFull(),
                 TextEntry::make('title')
                     ->label('Titulo'),
                 TextEntry::make('description')
@@ -168,12 +151,6 @@ class TaskResource extends Resource
     {
         return $table
             ->columns([
-                ImageColumn::make('image')
-                    ->label('Foto')
-                    ->disk('public')
-                    ->visibility('public')
-                    ->square()
-                    ->size(52),
                 TextColumn::make('title')
                     ->label('Titulo')
                     ->searchable(),

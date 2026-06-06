@@ -88,6 +88,14 @@ class IncidentResource extends Resource
                         'Alta' => 'Alta',
                     ])
                     ->required(),
+                Select::make('category')
+                    ->label('Categoría')
+                    ->options([
+                        'Limpieza'      => 'Limpieza',
+                        'Mantenimiento' => 'Mantenimiento',
+                        'Seguridad'     => 'Seguridad',
+                    ])
+                    ->nullable(),
             ]);
     }
 
@@ -139,6 +147,11 @@ class IncidentResource extends Resource
                         'Baja' => 'info',
                         default => 'gray',
                     }),
+                TextEntry::make('category')
+                    ->label('Categoría')
+                    ->badge()
+                    ->color('info')
+                    ->placeholder('-'),
                 TextEntry::make('tasks_count')
                     ->label('Tareas asociadas'),
                 TextEntry::make('reviewer.name')
@@ -202,6 +215,12 @@ class IncidentResource extends Resource
                         'Baja' => 'info',
                         default => 'gray',
                     }),
+                TextColumn::make('category')
+                    ->label('Categoría')
+                    ->badge()
+                    ->color('info')
+                    ->placeholder('-')
+                    ->searchable(),
                 TextColumn::make('tasks_count')
                     ->label('Tareas')
                     ->counts('tasks'),
@@ -224,6 +243,13 @@ class IncidentResource extends Resource
                         'Alta' => 'Alta',
                         'Media' => 'Media',
                         'Baja' => 'Baja',
+                    ]),
+                SelectFilter::make('category')
+                    ->label('Categoría')
+                    ->options([
+                        'Limpieza'      => 'Limpieza',
+                        'Mantenimiento' => 'Mantenimiento',
+                        'Seguridad'     => 'Seguridad',
                     ]),
                 SelectFilter::make('review_status')
                     ->label('Revision')
