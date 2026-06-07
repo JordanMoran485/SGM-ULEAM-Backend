@@ -6,6 +6,8 @@ use App\Filament\Resources\Incidents\Pages\ManageIncidents;
 use App\Models\Incident;
 use App\Models\Task;
 use App\Notifications\IncidentAssignedNotification;
+use App\Notifications\IncidentRejectedNotification;
+use App\Notifications\TaskUnlinkedNotification;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -310,12 +312,26 @@ class IncidentResource extends Resource
                             ->maxLength(1000),
                     ])
                     ->action(function (Incident $record, array $data): void {
+                        // Si ya estaba aceptada, desvincular la tarea asociada y notificar al conserje
+                        if ($record->review_status === 'Aceptada') {
+                            $record->loadMissing('tasks');
+                            foreach ($record->tasks as $linkedTask) {
+                                $linkedTask->user?->notify(new TaskUnlinkedNotification($record, $linkedTask));
+                                $linkedTask->update(['incident_id' => null]);
+                            }
+                        }
+
                         $record->update([
+                            'status'        => 'Pendiente',
                             'review_status' => 'Rechazada',
-                            'review_notes' => $data['review_notes'],
-                            'reviewed_at' => now(),
-                            'reviewed_by' => auth()->id(),
+                            'review_notes'  => $data['review_notes'],
+                            'reviewed_at'   => now(),
+                            'reviewed_by'   => auth()->id(),
                         ]);
+
+                        // Notificar al conserje que reportó la incidencia
+                        $record->loadMissing('user');
+                        $record->user?->notify(new IncidentRejectedNotification($record->fresh(), $data['review_notes']));
 
                         Notification::make()
                             ->title('Incidencia rechazada')
