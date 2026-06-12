@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Incidents;
 use App\Filament\Resources\Incidents\Pages\ManageIncidents;
 use App\Models\Incident;
 use App\Models\Task;
+use App\Notifications\IncidentAcceptedNotification;
 use App\Notifications\IncidentAssignedNotification;
 use App\Notifications\IncidentRejectedNotification;
 use App\Notifications\TaskUnlinkedNotification;
@@ -292,7 +293,12 @@ class IncidentResource extends Resource
                             'reviewed_by' => auth()->id(),
                         ]);
 
-                        $task->user?->notify(new IncidentAssignedNotification($record->fresh(), $task));
+                        $fresh = $record->fresh();
+
+                        $task->user?->notify(new IncidentAssignedNotification($fresh, $task));
+
+                        $record->loadMissing('user');
+                        $record->user?->notify(new IncidentAcceptedNotification($fresh, $task, $data['review_notes'] ?: null));
 
                         Notification::make()
                             ->title('Incidencia aprobada y conserje notificado')

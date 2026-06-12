@@ -8,13 +8,14 @@ use App\Notifications\Channels\ExpoPushChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 
-class IncidentAssignedNotification extends Notification
+class IncidentAcceptedNotification extends Notification
 {
     use Queueable;
 
     public function __construct(
         protected Incident $incident,
         protected Task $task,
+        protected ?string $notes = null,
     ) {}
 
     public function via(object $notifiable): array
@@ -25,27 +26,34 @@ class IncidentAssignedNotification extends Notification
     public function toDatabase(object $notifiable): array
     {
         return [
-            'title'       => 'Área pendiente de limpieza',
-            'body'        => "El supervisor aprobó la incidencia \"{$this->incident->title}\". Debes atender el área reportada.",
+            'title'       => 'Incidencia aprobada',
+            'body'        => $this->notes
+                ? "Tu reporte \"{$this->incident->title}\" fue aprobado. Nota: {$this->notes}"
+                : "Tu reporte \"{$this->incident->title}\" fue aprobado por el supervisor.",
             'incident_id'       => $this->incident->getKey(),
             'task_id'           => $this->task->getKey(),
             'location'          => $this->incident->location,
             'priority'          => $this->task->priority,
             'status'            => $this->task->status,
-            'notification_type' => 'task_assigned',
+            'notification_type' => 'incident_accepted',
         ];
     }
 
     public function toExpoPush(object $notifiable): array
     {
         return [
-            'title' => 'Área pendiente de limpieza',
-            'body'  => "El supervisor aprobó \"{$this->incident->title}\". Debes atender el área reportada.",
+            'title' => 'Incidencia aprobada',
+            'body'  => $this->notes
+                ? "Tu reporte \"{$this->incident->title}\" fue aprobado. Nota: {$this->notes}"
+                : "Tu reporte \"{$this->incident->title}\" fue aprobado por el supervisor.",
             'sound' => 'default',
             'data'  => [
                 'incident_id' => $this->incident->getKey(),
                 'task_id'     => $this->task->getKey(),
-                'type'        => 'task',
+                'location'    => $this->incident->location,
+                'priority'    => $this->task->priority,
+                'status'      => $this->task->status,
+                'type'        => 'incident',
             ],
         ];
     }

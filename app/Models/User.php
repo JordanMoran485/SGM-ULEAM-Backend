@@ -215,6 +215,11 @@ class User extends Authenticatable implements FilamentUser
             && $user->belongsToSameFacultadAs($this);
     }
 
+    public function pushTokens(): HasMany
+    {
+        return $this->hasMany(PushToken::class);
+    }
+
     public function tasks(): HasMany
     {
         return $this->hasMany(Task::class);
