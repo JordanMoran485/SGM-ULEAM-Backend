@@ -1,0 +1,1 @@
+@livewire('location-detail-table')

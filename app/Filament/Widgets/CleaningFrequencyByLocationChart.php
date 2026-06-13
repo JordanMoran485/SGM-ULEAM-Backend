@@ -2,11 +2,11 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Facultad;
 use App\Models\Task;
 use App\Support\TaskDashboardFilters;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class CleaningFrequencyByLocationChart extends ChartWidget
@@ -15,42 +15,59 @@ class CleaningFrequencyByLocationChart extends ChartWidget
 
     protected ?string $heading = 'Limpiezas por ubicacion';
 
-    protected ?string $description = 'Ranking de ubicaciones con mayor cantidad de limpiezas en el periodo filtrado.';
+    protected ?string $maxHeight = '500px';
 
-    protected ?string $maxHeight = '360px';
+    protected int | string | array $columnSpan = 'full';
 
-    protected int $visibleLocationsLimit = 10;
+    protected function getFilters(): ?array
+    {
+        $options = [
+            'all' => 'Todas las facultades',
+            'ep'  => 'Empresa Pública EP',
+        ];
 
-    protected int | string | array $columnSpan = [
-        'md' => 1,
-        'xl' => 1,
-    ];
+        Facultad::orderBy('name')->get()->each(function (Facultad $f) use (&$options): void {
+            $options[(string) $f->id] = $f->display_name;
+        });
+
+        return $options;
+    }
 
     protected function getData(): array
     {
-        $filters = $this->pageFilters ?? [];
+        $filter    = $this->filter ?? 'all';
+        $filters   = $this->pageFilters ?? [];
 
-        $locations = TaskDashboardFilters::apply(
+        $query = TaskDashboardFilters::apply(
             Task::query()->visibleTo(auth()->user()),
             $filters
-        )
+        );
+
+        if ($filter === 'ep') {
+            $query->whereHas('user', fn ($q) => $q->where('tipo_conserje', 'ep'));
+        } elseif ($filter !== 'all') {
+            $query->whereHas('user', fn ($q) => $q->where('facultad_id', (int) $filter));
+        }
+
+        $locations = $query
             ->select('location', DB::raw('COUNT(*) as total'))
             ->whereNotNull('location')
             ->where('location', '!=', '')
             ->groupBy('location')
             ->orderByDesc('total')
+            ->limit(10)
             ->get();
-
-        $locations = $this->groupOverflowLocations($locations);
 
         return [
             'datasets' => [
                 [
-                    'label' => 'Limpiezas',
-                    'data' => $locations->pluck('total')->all(),
-                    'backgroundColor' => '#0f766e',
-                    'borderRadius' => 8,
-                    'barThickness' => 18,
+                    'label'               => 'Limpiezas',
+                    'data'                => $locations->pluck('total')->all(),
+                    'backgroundColor'     => '#4A6CF7',
+                    'hoverBackgroundColor' => '#2D3FE0',
+                    'borderRadius'        => 8,
+                    'borderSkipped'       => false,
+                    'barThickness'        => 18,
                 ],
             ],
             'labels' => $locations->pluck('location')->all(),
@@ -60,24 +77,42 @@ class CleaningFrequencyByLocationChart extends ChartWidget
     protected function getOptions(): array
     {
         return [
-            'indexAxis' => 'y',
-            'maintainAspectRatio' => false,
+            'indexAxis'   => 'y',
+            'aspectRatio' => 1,
             'plugins' => [
-                'legend' => [
-                    'display' => false,
+                'legend' => ['display' => false],
+                'tooltip' => [
+                    'backgroundColor' => '#1A1F36',
+                    'titleColor'      => '#ffffff',
+                    'bodyColor'       => '#8F95B2',
+                    'padding'         => 10,
+                    'cornerRadius'    => 8,
+                    'displayColors'   => false,
                 ],
             ],
             'scales' => [
                 'x' => [
                     'beginAtZero' => true,
-                    'ticks' => [
+                    'border'      => ['display' => false],
+                    'ticks'       => [
                         'precision' => 0,
+                        'color'     => '#94a3b8',
+                        'font'      => ['size' => 11],
+                    ],
+                    'grid' => [
+                        'color'     => 'rgba(148,163,184,0.10)',
+                        'drawTicks' => false,
                     ],
                 ],
                 'y' => [
-                    'ticks' => [
+                    'border' => ['display' => false],
+                    'ticks'  => [
                         'autoSkip' => false,
+                        'color'    => '#475569',
+                        'font'     => ['size' => 12, 'weight' => '500'],
+                        'padding'  => 8,
                     ],
+                    'grid' => ['display' => false],
                 ],
             ],
         ];
@@ -86,22 +121,5 @@ class CleaningFrequencyByLocationChart extends ChartWidget
     protected function getType(): string
     {
         return 'bar';
-    }
-
-    protected function groupOverflowLocations(Collection $locations): Collection
-    {
-        if ($locations->count() <= $this->visibleLocationsLimit) {
-            return $locations;
-        }
-
-        $visibleLocations = $locations->take($this->visibleLocationsLimit - 1);
-        $overflowLocations = $locations->slice($this->visibleLocationsLimit - 1);
-
-        $visibleLocations->push((object) [
-            'location' => 'Otras ubicaciones',
-            'total' => $overflowLocations->sum('total'),
-        ]);
-
-        return $visibleLocations->values();
     }
 }
