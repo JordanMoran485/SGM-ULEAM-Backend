@@ -27,9 +27,10 @@ class TaskUnlinkedNotification extends Notification
         return [
             'title'       => 'Incidencia desvinculada',
             'body'        => "La incidencia \"{$this->incident->title}\" fue rechazada y ya no está asociada a tu tarea.",
-            'incident_id' => $this->incident->getKey(),
-            'task_id'     => $this->task->getKey(),
-            'location'    => $this->incident->location,
+            'incident_id'       => $this->incident->getKey(),
+            'task_id'           => $this->task->getKey(),
+            'location'          => $this->incident->location,
+            'notification_type' => 'task_unlinked',
         ];
     }
 

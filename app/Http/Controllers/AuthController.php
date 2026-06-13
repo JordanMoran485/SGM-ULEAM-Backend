@@ -71,6 +71,7 @@ class AuthController extends Controller
         $validateData['password']= Hash::make(value: $request->password);
 
         $user = User::create($validateData);
+        $user->assignRole('conserje');
         $user->load(['facultad', 'roles']);
 
         $token = $user->createToken('myapptoken')->plainTextToken;
