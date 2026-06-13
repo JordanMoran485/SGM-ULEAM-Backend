@@ -20,6 +20,8 @@ class FacultadResource extends Resource
 
     protected static ?string $modelLabel = 'Facultad';
 
+    protected static ?string $pluralModelLabel = 'Facultades';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingOffice2;
 
     protected static ?int $navigationSort = 2;
