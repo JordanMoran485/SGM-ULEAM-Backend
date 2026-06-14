@@ -34,6 +34,10 @@ class TaskResourceUrl
             ];
         }
 
+        if ($filters['today'] ?? false) {
+            $tableFilters['today'] = ['isActive' => true];
+        }
+
         if ($filters['active_only'] ?? false) {
             $tableFilters['active_only'] = [
                 'isActive' => true,

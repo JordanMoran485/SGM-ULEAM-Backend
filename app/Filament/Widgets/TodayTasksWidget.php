@@ -32,12 +32,9 @@ class TodayTasksWidget extends TableWidget
                 Action::make('view_all_today')
                     ->label('Ver todas')
                     ->icon('heroicon-o-arrow-top-right-on-square')
-                    ->url(
-                        TaskResourceUrl::filtered($this->pageFilters ?? [], [
-                            'from' => now()->toDateString(),
-                            'until' => now()->toDateString(),
-                        ])
-                    ),
+                    ->url(TaskResourceUrl::filtered($this->pageFilters ?? [], [
+                        'today' => true,
+                    ])),
             ])
             ->defaultPaginationPageOption(5)
             ->paginated([5])

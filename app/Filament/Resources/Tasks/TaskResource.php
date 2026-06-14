@@ -250,6 +250,9 @@ class TaskResource extends Resource
                                 fn (Builder $query): Builder => $query->whereDate('start_at', '<=', $data['until']),
                             );
                     }),
+                Filter::make('today')
+                    ->label('Solo hoy')
+                    ->query(fn (Builder $query): Builder => $query->whereDate('start_at', now()->toDateString())),
                 Filter::make('active_only')
                     ->label('Solo activas')
                     ->query(fn (Builder $query): Builder => $query->where('status', '!=', 'Completada')),
