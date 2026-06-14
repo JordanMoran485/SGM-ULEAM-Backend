@@ -41,7 +41,9 @@ class TaskTemplateResource extends Resource
             Select::make('tipo_conserje')
                 ->label('Tipo de conserje')
                 ->options(function (): array {
-                    if (auth()->user()->isSuperAdmin()) {
+                    $user = auth()->user();
+
+                    if ($user->isSuperAdmin() || $user->isSupervisorGeneral()) {
                         return User::conserjeTypeOptions();
                     }
 
@@ -98,7 +100,9 @@ class TaskTemplateResource extends Resource
                 SelectFilter::make('tipo_conserje')
                     ->label('Tipo de conserje')
                     ->options(function (): array {
-                        if (auth()->user()->isSuperAdmin()) {
+                        $user = auth()->user();
+
+                        if ($user->isSuperAdmin() || $user->isSupervisorGeneral()) {
                             return User::conserjeTypeOptions();
                         }
 

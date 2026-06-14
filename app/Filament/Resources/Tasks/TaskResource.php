@@ -202,7 +202,9 @@ class TaskResource extends Resource
                         Select::make('tipo_conserje')
                             ->label('Tipo de conserje')
                             ->options(function (): array {
-                                if (auth()->user()->isSuperAdmin()) {
+                                $user = auth()->user();
+
+                                if ($user->isSuperAdmin() || $user->isSupervisorGeneral()) {
                                     return User::conserjeTypeOptions();
                                 }
 

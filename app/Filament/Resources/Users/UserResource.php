@@ -92,7 +92,9 @@ class UserResource extends Resource
                     ->rule('regex:/^[A-Za-z0-9._%+-]+@live\.uleam\.edu\.ec$/i')
                     ->validationMessages([
                         'regex' => 'El correo debe pertenecer al dominio @live.uleam.edu.ec.',
+                        'unique' => 'Este correo ya está en uso por otro usuario.',
                     ])
+                    ->unique(table: 'users', column: 'email', ignoreRecord: true)
                     ->required()
                     ->maxLength(30),
                 TextInput::make('password')
@@ -276,7 +278,9 @@ class UserResource extends Resource
                         Select::make('tipo_conserje')
                             ->label('Tipo de conserje')
                             ->options(function (): array {
-                                if (auth()->user()->isSuperAdmin()) {
+                                $user = auth()->user();
+
+                                if ($user->isSuperAdmin() || $user->isSupervisorGeneral()) {
                                     return User::conserjeTypeOptions();
                                 }
 
