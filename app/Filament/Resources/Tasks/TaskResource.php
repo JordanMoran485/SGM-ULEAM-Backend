@@ -16,7 +16,8 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -50,11 +51,17 @@ class TaskResource extends Resource
                     ->rows(4)
                     ->maxLength(1000)
                     ->columnSpanFull(),
+                Select::make('tipo_conserje')
+                    ->label('Tipo de conserje')
+                    ->options(User::conserjeTypeOptions())
+                    ->placeholder('Todos')
+                    ->live()
+                    ->dehydrated(false)
+                    ->afterStateUpdated(fn (Set $set) => $set('user_id', null)),
                 Select::make('user_id')
                     ->label('Asignar a conserje')
-                    ->options(fn (): array => User::conserjeOptions())
+                    ->options(fn (Get $get): array => User::conserjeOptions(tipoConserje: $get('tipo_conserje')))
                     ->searchable()
-                    ->preload()
                     ->required(),
                 Select::make('status')
                     ->label('Estado de la tarea')
@@ -64,7 +71,8 @@ class TaskResource extends Resource
                         'Completada' => 'Completada',
                     ])
                     ->default('Pendiente')
-                    ->required(),
+                    ->required()
+                    ->hiddenOn('create'),
                 Select::make('priority')
                     ->label('Prioridad')
                     ->options([
@@ -77,10 +85,6 @@ class TaskResource extends Resource
                 TextInput::make('location')
                     ->label('Ubicacion')
                     ->maxLength(255),
-                Toggle::make('all_day')
-                    ->label('Todo el dia')
-                    ->default(true)
-                    ->required(),
                 DateTimePicker::make('start_at')
                     ->label('Inicio')
                     ->native(false)
@@ -90,11 +94,6 @@ class TaskResource extends Resource
                     ->label('Fin')
                     ->native(false)
                     ->seconds(false),
-                DatePicker::make('due_date')
-                    ->label('Fecha de vencimiento')
-                    ->native(false)
-                    ->disabled()
-                    ->dehydrated(false),
             ]);
     }
 
