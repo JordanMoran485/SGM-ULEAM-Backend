@@ -190,7 +190,8 @@ class IncidentResource extends Resource
                 TextColumn::make('user.name')
                     ->label('Reportado por')
                     ->formatStateUsing(fn (?string $state, Incident $record): string => trim(($record->user?->name ?? '') . ' ' . ($record->user?->lastname ?? '')) ?: '-')
-                    ->searchable(['users.name', 'users.lastname']),
+                    ->searchable(['users.name', 'users.lastname'])
+                    ->sortable(),
                 TextColumn::make('location')
                     ->label('Ubicacion')
                     ->searchable(),
@@ -223,7 +224,8 @@ class IncidentResource extends Resource
                     }),
                 TextColumn::make('tasks_count')
                     ->label('Tareas')
-                    ->counts('tasks'),
+                    ->counts('tasks')
+                    ->sortable(),
                 TextColumn::make('created_at')
                     ->label('Creada')
                     ->dateTime('d/m/Y H:i')
