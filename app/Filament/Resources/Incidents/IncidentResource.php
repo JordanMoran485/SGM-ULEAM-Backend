@@ -60,7 +60,15 @@ class IncidentResource extends Resource
                     ->required()
                     ->maxLength(255),
                 FileUpload::make('image')
-                    ->label('Evidencia')
+                    ->label('Evidencia (foto 1)')
+                    ->image()
+                    ->disk('public')
+                    ->directory('incidents')
+                    ->imageEditor()
+                    ->visibility('public')
+                    ->columnSpanFull(),
+                FileUpload::make('image2')
+                    ->label('Evidencia (foto 2)')
                     ->image()
                     ->disk('public')
                     ->directory('incidents')
@@ -99,11 +107,18 @@ class IncidentResource extends Resource
         return $schema
             ->components([
                 ImageEntry::make('image')
-                    ->label('Evidencia')
+                    ->label('Evidencia (foto 1)')
                     ->disk('public')
                     ->visibility('public')
                     ->height(320)
                     ->columnSpanFull(),
+                ImageEntry::make('image2')
+                    ->label('Evidencia (foto 2)')
+                    ->disk('public')
+                    ->visibility('public')
+                    ->height(320)
+                    ->columnSpanFull()
+                    ->hidden(fn (Incident $record): bool => empty($record->image2)),
                 TextEntry::make('title')
                     ->label('Titulo'),
                 TextEntry::make('description')
@@ -161,6 +176,7 @@ class IncidentResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('created_at', 'desc')
             ->columns([
                 ImageColumn::make('image')
                     ->label('Foto')
