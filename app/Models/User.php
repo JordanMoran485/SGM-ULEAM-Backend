@@ -231,6 +231,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Task::class);
     }
 
+    public function taskTemplate(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(TaskTemplate::class);
+    }
+
     public function incidents(): HasMany
     {
         return $this->hasMany(Incident::class);
