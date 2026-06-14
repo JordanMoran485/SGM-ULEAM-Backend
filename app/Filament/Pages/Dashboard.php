@@ -35,12 +35,12 @@ class Dashboard extends BaseDashboard
     {
         return [
             TaskOverviewStats::class,
+            TaskAlertsWidget::class,
+            TodayTasksWidget::class,
             TaskStatusPriorityChart::class,
+            ConserjeWorkloadWidget::class,
             CleaningFrequencyByLocationChart::class,
             CleaningLocationSummaryTable::class,
-            TodayTasksWidget::class,
-            TaskAlertsWidget::class,
-            ConserjeWorkloadWidget::class,
         ];
     }
 

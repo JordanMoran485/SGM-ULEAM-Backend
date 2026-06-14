@@ -5,13 +5,19 @@ namespace App\Filament\Widgets;
 use App\Models\Facultad;
 use App\Models\Task;
 use App\Support\TaskDashboardFilters;
+use Filament\Forms\Components\Select;
+use Filament\Schemas\Schema;
 use Filament\Widgets\ChartWidget;
+use Filament\Widgets\ChartWidget\Concerns\HasFiltersSchema;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Illuminate\Support\Facades\DB;
 
 class CleaningFrequencyByLocationChart extends ChartWidget
 {
+    use HasFiltersSchema;
     use InteractsWithPageFilters;
+
+    protected string $view = 'filament.widgets.cleaning-frequency-by-location-chart';
 
     protected ?string $heading = 'Limpiezas por ubicacion';
 
@@ -19,7 +25,7 @@ class CleaningFrequencyByLocationChart extends ChartWidget
 
     protected int | string | array $columnSpan = 'full';
 
-    protected function getFilters(): ?array
+    public function filtersSchema(Schema $schema): Schema
     {
         $options = [
             'all' => 'Todas las facultades',
@@ -30,23 +36,30 @@ class CleaningFrequencyByLocationChart extends ChartWidget
             $options[(string) $f->id] = $f->display_name;
         });
 
-        return $options;
+        return $schema->schema([
+            Select::make('facultad_id')
+                ->label('Facultad / Empresa')
+                ->placeholder('Todas las facultades')
+                ->options($options)
+                ->searchable()
+                ->native(false),
+        ]);
     }
 
     protected function getData(): array
     {
-        $filter    = $this->filter ?? 'all';
-        $filters   = $this->pageFilters ?? [];
+        $facultadId  = $this->filters['facultad_id'] ?? null;
+        $pageFilters = $this->pageFilters ?? [];
 
         $query = TaskDashboardFilters::apply(
             Task::query()->visibleTo(auth()->user()),
-            $filters
+            $pageFilters
         );
 
-        if ($filter === 'ep') {
+        if ($facultadId === 'ep') {
             $query->whereHas('user', fn ($q) => $q->where('tipo_conserje', 'ep'));
-        } elseif ($filter !== 'all') {
-            $query->whereHas('user', fn ($q) => $q->where('facultad_id', (int) $filter));
+        } elseif (filled($facultadId) && $facultadId !== 'all') {
+            $query->whereHas('user', fn ($q) => $q->where('facultad_id', (int) $facultadId));
         }
 
         $locations = $query

@@ -50,6 +50,7 @@ class CleaningLocationSummaryTable extends TableWidget
 
                                 return ['ep' => '— Empresa Pública EP'] + $facultades;
                             })
+                            ->searchable()
                             ->live()
                             ->afterStateUpdated(fn (Set $set) => $set('conserje_id', null)),
 
