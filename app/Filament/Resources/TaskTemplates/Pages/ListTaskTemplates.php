@@ -5,6 +5,7 @@ namespace App\Filament\Resources\TaskTemplates\Pages;
 use App\Filament\Resources\TaskTemplates\TaskTemplateResource;
 use App\Models\Task;
 use App\Models\TaskTemplate;
+use App\Notifications\WeekTasksSummaryNotification;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -13,6 +14,7 @@ use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Collection;
 
 class ListTaskTemplates extends ListRecords
 {
@@ -57,7 +59,7 @@ class ListTaskTemplates extends ListRecords
                     $selectedUsers = $data['user_ids'] ?? [];
 
                     $templates = TaskTemplate::query()
-                        ->with('taskTemplateItems')
+                        ->with(['taskTemplateItems', 'user'])
                         ->visibleTo(auth()->user())
                         ->whereIn('user_id', $selectedUsers)
                         ->get();
@@ -72,8 +74,13 @@ class ListTaskTemplates extends ListRecords
                         return;
                     }
 
-                    $created = 0;
-                    $skipped = 0;
+                    $weekLabel = $weekStart->format('d/m/Y')
+                        . ' – '
+                        . $weekStart->copy()->addDays(6)->format('d/m/Y');
+
+                    $created        = 0;
+                    $skipped        = 0;
+                    $tasksByUser    = [];
 
                     foreach ($templates as $template) {
                         foreach ($template->taskTemplateItems as $item) {
@@ -98,25 +105,31 @@ class ListTaskTemplates extends ListRecords
                                 ? $taskDate->copy()->setTimeFromTimeString($item->end_time)
                                 : null;
 
-                            Task::create([
-                                'user_id'     => $template->user_id,
-                                'title'       => $item->title,
-                                'description' => $item->description,
-                                'location'    => $item->location,
-                                'priority'    => $item->priority,
-                                'status'      => 'Pendiente',
-                                'start_at'    => $startAt,
-                                'end_at'      => $endAt,
-                                'all_day'     => $item->all_day,
+                            $task = Task::create([
+                                'user_id'          => $template->user_id,
+                                'task_template_id' => $template->getKey(),
+                                'title'            => $item->title,
+                                'description'      => $item->description,
+                                'location'         => $item->location,
+                                'priority'         => $item->priority,
+                                'status'           => 'Pendiente',
+                                'start_at'         => $startAt,
+                                'end_at'           => $endAt,
+                                'all_day'          => $item->all_day,
                             ]);
 
+                            $tasksByUser[$template->user_id]['user']    = $template->user;
+                            $tasksByUser[$template->user_id]['tasks'][] = $task;
                             $created++;
                         }
                     }
 
-                    $weekLabel = $weekStart->format('d/m/Y')
-                        . ' – '
-                        . $weekStart->copy()->addDays(6)->format('d/m/Y');
+                    foreach ($tasksByUser as ['user' => $user, 'tasks' => $tasks]) {
+                        $user->notify(new WeekTasksSummaryNotification(
+                            collect($tasks),
+                            $weekLabel,
+                        ));
+                    }
 
                     $body = "Se crearon {$created} "
                         . ($created === 1 ? 'tarea' : 'tareas')
@@ -131,6 +144,75 @@ class ListTaskTemplates extends ListRecords
                     Notification::make()
                         ->title('Semana generada')
                         ->body($body)
+                        ->success()
+                        ->send();
+                }),
+
+            Action::make('revertWeek')
+                ->label('Revertir semana')
+                ->icon(Heroicon::OutlinedTrash)
+                ->color('danger')
+                ->modalHeading('Revertir tareas de la semana')
+                ->modalDescription('Elimina las tareas que fueron generadas desde plantilla para los conserjes y semana seleccionados. Las tareas creadas manualmente no se verán afectadas.')
+                ->modalSubmitActionLabel('Eliminar tareas')
+                ->form([
+                    Select::make('user_ids')
+                        ->label('Conserjes')
+                        ->options(fn (): array => TaskTemplate::query()
+                            ->with('user')
+                            ->visibleTo(auth()->user())
+                            ->get()
+                            ->mapWithKeys(fn (TaskTemplate $t): array => [
+                                $t->user_id => $t->user?->getDisplayNameWithConserjeType() ?? '—',
+                            ])
+                            ->all()
+                        )
+                        ->multiple()
+                        ->native(false)
+                        ->searchable()
+                        ->required(),
+
+                    DatePicker::make('week_date')
+                        ->label('Semana a revertir')
+                        ->helperText('Selecciona cualquier día de la semana que quieres eliminar.')
+                        ->required()
+                        ->native(false)
+                        ->default(now()),
+                ])
+                ->action(function (array $data): void {
+                    $weekStart = Carbon::parse($data['week_date'])->startOfWeek(Carbon::MONDAY);
+                    $weekEnd   = $weekStart->copy()->endOfWeek(Carbon::SUNDAY);
+
+                    $templateIds = TaskTemplate::query()
+                        ->visibleTo(auth()->user())
+                        ->whereIn('user_id', $data['user_ids'])
+                        ->pluck('id');
+
+                    $deleted = Task::query()
+                        ->whereIn('task_template_id', $templateIds)
+                        ->whereBetween('start_at', [$weekStart, $weekEnd])
+                        ->count();
+
+                    Task::query()
+                        ->whereIn('task_template_id', $templateIds)
+                        ->whereBetween('start_at', [$weekStart, $weekEnd])
+                        ->delete();
+
+                    $weekLabel = $weekStart->format('d/m/Y') . ' – ' . $weekEnd->format('d/m/Y');
+
+                    if ($deleted === 0) {
+                        Notification::make()
+                            ->title('Nada que revertir')
+                            ->body("No se encontraron tareas generadas desde plantilla para la semana del {$weekLabel}.")
+                            ->warning()
+                            ->send();
+
+                        return;
+                    }
+
+                    Notification::make()
+                        ->title('Semana revertida')
+                        ->body("Se eliminaron {$deleted} " . ($deleted === 1 ? 'tarea' : 'tareas') . " de la semana del {$weekLabel}.")
                         ->success()
                         ->send();
                 }),

@@ -13,6 +13,7 @@ class Task extends Model
         'description',
         'incident_id',
         'user_id',
+        'task_template_id',
         'image',
         'status',
         'priority',
