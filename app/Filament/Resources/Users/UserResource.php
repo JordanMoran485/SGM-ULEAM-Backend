@@ -27,6 +27,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Spatie\Permission\Models\Role;
@@ -270,7 +271,60 @@ class UserResource extends Resource
                     ->label('Actualizado en'),
             ])
             ->filters([
-                //
+                Filter::make('conserje_filters')
+                    ->form([
+                        Select::make('tipo_conserje')
+                            ->label('Tipo de conserje')
+                            ->options(function (): array {
+                                if (auth()->user()->isSuperAdmin()) {
+                                    return User::conserjeTypeOptions();
+                                }
+
+                                return ['uleam' => 'Uleam'];
+                            })
+                            ->placeholder('Seleccionar...')
+                            ->live()
+                            ->afterStateUpdated(fn (Set $set) => $set('user_id', null)),
+
+                        Select::make('user_id')
+                            ->label('Conserje')
+                            ->options(fn (Get $get): array => User::conserjeOptions(
+                                tipoConserje: $get('tipo_conserje')
+                            ))
+                            ->placeholder(fn (Get $get): string => blank($get('tipo_conserje'))
+                                ? 'Selecciona un tipo primero'
+                                : 'Todos'
+                            )
+                            ->disabled(fn (Get $get): bool => blank($get('tipo_conserje')))
+                            ->searchable(),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        if (filled($data['tipo_conserje'] ?? null)) {
+                            $query->where('tipo_conserje', $data['tipo_conserje']);
+                        }
+
+                        if (filled($data['user_id'] ?? null)) {
+                            $query->where('id', $data['user_id']);
+                        }
+
+                        return $query;
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+
+                        if (filled($data['tipo_conserje'] ?? null)) {
+                            $indicators[] = 'Tipo: ' . (User::conserjeTypeOptions()[$data['tipo_conserje']] ?? $data['tipo_conserje']);
+                        }
+
+                        if (filled($data['user_id'] ?? null)) {
+                            $user = User::find($data['user_id']);
+                            if ($user) {
+                                $indicators[] = 'Conserje: ' . $user->full_name;
+                            }
+                        }
+
+                        return $indicators;
+                    }),
             ])
             ->recordActions([
                 ViewAction::make(),

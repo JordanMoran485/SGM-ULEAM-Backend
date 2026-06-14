@@ -41,13 +41,11 @@ class TaskTemplateResource extends Resource
             Select::make('tipo_conserje')
                 ->label('Tipo de conserje')
                 ->options(function (): array {
-                    $user = auth()->user();
-
-                    if ($user->isSupervisor()) {
-                        return ['uleam' => 'Uleam'];
+                    if (auth()->user()->isSuperAdmin()) {
+                        return User::conserjeTypeOptions();
                     }
 
-                    return User::conserjeTypeOptions();
+                    return ['uleam' => 'Uleam'];
                 })
                 ->placeholder('Todos')
                 ->live()
@@ -57,6 +55,11 @@ class TaskTemplateResource extends Resource
             Select::make('user_id')
                 ->label('Conserje')
                 ->options(fn (Get $get): array => User::conserjeOptions(tipoConserje: $get('tipo_conserje')))
+                ->placeholder(fn (Get $get): string => blank($get('tipo_conserje'))
+                    ? 'Selecciona un tipo primero'
+                    : 'Selecciona un conserje'
+                )
+                ->disabled(fn (Get $get): bool => blank($get('tipo_conserje')))
                 ->searchable()
                 ->required()
                 ->unique(ignoreRecord: true),
@@ -95,13 +98,11 @@ class TaskTemplateResource extends Resource
                 SelectFilter::make('tipo_conserje')
                     ->label('Tipo de conserje')
                     ->options(function (): array {
-                        $user = auth()->user();
-
-                        if ($user->isSupervisor()) {
-                            return ['uleam' => 'Uleam'];
+                        if (auth()->user()->isSuperAdmin()) {
+                            return User::conserjeTypeOptions();
                         }
 
-                        return User::conserjeTypeOptions();
+                        return ['uleam' => 'Uleam'];
                     })
                     ->query(function (Builder $query, array $data): Builder {
                         $value = $data['value'] ?? null;
