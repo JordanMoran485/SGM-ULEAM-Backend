@@ -23,6 +23,7 @@ class User extends Authenticatable implements FilamentUser
 
     public const SYSTEM_ROLES = [
         'super_admin',
+        'supervisor_general',
         'supervisor',
     ];
 
@@ -134,7 +135,7 @@ class User extends Authenticatable implements FilamentUser
             return $query;
         }
 
-        if ($viewer->isSuperAdmin()) {
+        if ($viewer->isSuperAdmin() || $viewer->isSupervisorGeneral()) {
             return $query;
         }
 
@@ -165,6 +166,11 @@ class User extends Authenticatable implements FilamentUser
     public function isSuperAdmin(): bool
     {
         return $this->hasRole('super_admin');
+    }
+
+    public function isSupervisorGeneral(): bool
+    {
+        return $this->hasRole('supervisor_general');
     }
 
     public function isSupervisor(): bool

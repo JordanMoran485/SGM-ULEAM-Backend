@@ -19,6 +19,10 @@ class TaskPolicy
             return true;
         }
 
+        if (method_exists($authUser, 'isSupervisorGeneral') && $authUser->isSupervisorGeneral()) {
+            return true;
+        }
+
         return null;
     }
 
@@ -49,7 +53,8 @@ class TaskPolicy
 
     public function deleteAny(AuthUser $authUser): bool
     {
-        return method_exists($authUser, 'isSupervisor') && $authUser->isSupervisor();
+        return (method_exists($authUser, 'isSupervisor') && $authUser->isSupervisor())
+            || (method_exists($authUser, 'isSupervisorGeneral') && $authUser->isSupervisorGeneral());
     }
 
     public function restore(AuthUser $authUser, Task $task): bool

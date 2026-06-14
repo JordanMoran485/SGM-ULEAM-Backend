@@ -15,6 +15,7 @@ class UserSeeder extends Seeder
 
         $roles = collect([
             'super_admin',
+            'supervisor_general',
             'supervisor',
             'conserje',
         ])->mapWithKeys(fn (string $name): array => [

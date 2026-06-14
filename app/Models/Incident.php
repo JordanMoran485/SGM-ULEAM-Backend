@@ -33,7 +33,7 @@ class Incident extends Model
             return $query->whereRaw('1 = 0');
         }
 
-        if ($user->isSuperAdmin()) {
+        if ($user->isSuperAdmin() || $user->isSupervisorGeneral()) {
             return $query;
         }
 

@@ -107,7 +107,7 @@ class UserResource extends Resource
                         modifyQueryUsing: function (Builder $query): Builder {
                             $roles = auth()->user()?->isSupervisor()
                                 ? ['conserje']
-                                : ['super_admin', 'supervisor', 'conserje'];
+                                : ['super_admin', 'supervisor_general', 'supervisor', 'conserje'];
 
                             return $query->whereIn('name', $roles);
                         }
@@ -274,8 +274,10 @@ class UserResource extends Resource
             ])
             ->recordActions([
                 ViewAction::make(),
-                EditAction::make(),
-                DeleteAction::make(),
+                EditAction::make()
+                    ->visible(fn (): bool => ! (auth()->user()?->isSupervisorGeneral() ?? false)),
+                DeleteAction::make()
+                    ->visible(fn (): bool => ! (auth()->user()?->isSupervisorGeneral() ?? false)),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
@@ -289,14 +291,12 @@ class UserResource extends Resource
     {
         $query = parent::getEloquentQuery()
             ->with(['facultad', 'roles'])
-            ->whereHas('roles', fn (Builder $query): Builder => $query->whereIn('name', ['super_admin', 'supervisor', 'conserje']));
+            ->whereHas('roles', fn (Builder $query): Builder => $query->whereIn('name', ['super_admin', 'supervisor_general', 'supervisor', 'conserje']));
 
         $user = auth()->user();
 
         if ($user?->isSupervisor()) {
-            $query
-                ->role('conserje')
-                ->visibleTo($user);
+            $query->role('conserje')->visibleTo($user);
         }
 
         return $query;
@@ -311,6 +311,15 @@ class UserResource extends Resource
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->isSuperAdmin() || auth()->user()?->isSupervisor() || false;
+        $user = auth()->user();
+
+        return $user?->isSuperAdmin() || $user?->isSupervisorGeneral() || $user?->isSupervisor() || false;
+    }
+
+    public static function canCreate(): bool
+    {
+        $user = auth()->user();
+
+        return $user?->isSuperAdmin() || $user?->isSupervisor() || false;
     }
 }

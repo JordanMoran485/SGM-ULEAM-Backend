@@ -66,7 +66,7 @@ class Task extends Model
             return $query;
         }
 
-        if ($user->isSuperAdmin()) {
+        if ($user->isSuperAdmin() || $user->isSupervisorGeneral()) {
             return $query;
         }
 
