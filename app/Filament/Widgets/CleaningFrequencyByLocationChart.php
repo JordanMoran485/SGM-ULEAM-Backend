@@ -27,10 +27,13 @@ class CleaningFrequencyByLocationChart extends ChartWidget
 
     public function filtersSchema(Schema $schema): Schema
     {
-        $options = [
-            'all' => 'Todas las facultades',
-            'ep'  => 'Empresa Pública EP',
-        ];
+        $user = auth()->user();
+
+        $options = ['all' => 'Todas las facultades'];
+
+        if (! $user->isSupervisor()) {
+            $options['ep'] = 'Empresa Pública EP';
+        }
 
         Facultad::orderBy('name')->get()->each(function (Facultad $f) use (&$options): void {
             $options[(string) $f->id] = $f->display_name;
@@ -38,7 +41,7 @@ class CleaningFrequencyByLocationChart extends ChartWidget
 
         return $schema->schema([
             Select::make('facultad_id')
-                ->label('Facultad / Empresa')
+                ->label($user->isSupervisor() ? 'Facultad' : 'Facultad / Empresa')
                 ->placeholder('Todas las facultades')
                 ->options($options)
                 ->searchable()

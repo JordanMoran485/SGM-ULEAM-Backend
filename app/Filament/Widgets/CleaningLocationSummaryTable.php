@@ -40,13 +40,20 @@ class CleaningLocationSummaryTable extends TableWidget
                 Filter::make('ubicacion_filters')
                     ->form([
                         Select::make('facultad_id')
-                            ->label('Facultad / Empresa')
+                            ->label(fn (): string => auth()->user()->isSupervisor()
+                                ? 'Facultad'
+                                : 'Facultad / Empresa'
+                            )
                             ->placeholder('Todas')
                             ->options(function (): array {
                                 $facultades = Facultad::orderBy('name')
                                     ->get()
                                     ->mapWithKeys(fn (Facultad $f): array => [$f->id => $f->display_name])
                                     ->all();
+
+                                if (auth()->user()->isSupervisor()) {
+                                    return $facultades;
+                                }
 
                                 return ['ep' => '— Empresa Pública EP'] + $facultades;
                             })
@@ -56,10 +63,18 @@ class CleaningLocationSummaryTable extends TableWidget
 
                         Select::make('conserje_id')
                             ->label('Conserje')
-                            ->placeholder('Todos los conserjes')
+                            ->placeholder(fn (Get $get): string => blank($get('facultad_id'))
+                                ? 'Selecciona una facultad primero'
+                                : 'Todos'
+                            )
+                            ->disabled(fn (Get $get): bool => blank($get('facultad_id')))
                             ->searchable()
                             ->options(function (Get $get): array {
                                 $facultadId = $get('facultad_id');
+
+                                if (blank($facultadId)) {
+                                    return [];
+                                }
 
                                 return User::queryConserjes()
                                     ->when(
@@ -68,7 +83,9 @@ class CleaningLocationSummaryTable extends TableWidget
                                     )
                                     ->when(
                                         filled($facultadId) && $facultadId !== 'ep',
-                                        fn (Builder $q): Builder => $q->where('facultad_id', $facultadId)
+                                        fn (Builder $q): Builder => $q
+                                            ->where('facultad_id', $facultadId)
+                                            ->where('tipo_conserje', 'uleam')
                                     )
                                     ->orderBy('name')
                                     ->get()

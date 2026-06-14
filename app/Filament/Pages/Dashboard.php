@@ -65,7 +65,15 @@ class Dashboard extends BaseDashboard
         return $schema->components([
             Select::make('tipo_conserje')
                 ->label('Tipo de conserje')
-                ->options(User::conserjeTypeOptions())
+                ->options(function (): array {
+                    $user = auth()->user();
+
+                    if ($user->isSupervisor()) {
+                        return ['uleam' => 'Uleam'];
+                    }
+
+                    return User::conserjeTypeOptions();
+                })
                 ->native(false)
                 ->afterStateUpdated(fn (Set $set): mixed => $set('user_id', null))
                 ->live(),
@@ -73,7 +81,12 @@ class Dashboard extends BaseDashboard
                 ->label('Conserje')
                 ->options(fn (Get $get): array => User::conserjeOptions(tipoConserje: $get('tipo_conserje')))
                 ->searchable()
-                ->preload(),
+                ->preload()
+                ->disabled(fn (Get $get): bool => blank($get('tipo_conserje')))
+                ->placeholder(fn (Get $get): string => blank($get('tipo_conserje'))
+                    ? 'Selecciona un tipo primero'
+                    : 'Todos'
+                ),
             Select::make('status')
                 ->label('Estado')
                 ->options([

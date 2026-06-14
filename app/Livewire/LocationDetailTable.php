@@ -5,19 +5,30 @@ namespace App\Livewire;
 use App\Models\Facultad;
 use App\Models\Task;
 use App\Models\User;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
 class LocationDetailTable extends Component
 {
-    public ?int $facultadId = null;
-    public ?int $conserjeId = null;
+    public $facultadId   = null;
+    public $tipoConserje = null;
+    public $conserjeId   = null;
+
+    public function updatedFacultadId(): void
+    {
+        $this->conserjeId = null;
+    }
+
+    public function updatedTipoConserje(): void
+    {
+        $this->conserjeId = null;
+    }
 
     public function resetFilters(): void
     {
-        $this->facultadId = null;
-        $this->conserjeId = null;
+        $this->facultadId   = null;
+        $this->tipoConserje = null;
+        $this->conserjeId   = null;
     }
 
     public function render()
@@ -44,8 +55,22 @@ class LocationDetailTable extends Component
             ->get();
 
         $facultades = Facultad::orderBy('name')->get();
-        $conserjes  = User::queryConserjes($user)->orderBy('name')->get();
 
-        return view('livewire.location-detail-table', compact('locations', 'facultades', 'conserjes'));
+        $tipoOptions = $user->isSupervisor()
+            ? ['uleam' => 'Uleam']
+            : User::conserjeTypeOptions();
+
+        // Si hay facultad seleccionada, usar el tipo elegido o Uleam por defecto
+        // (los EP que aparecen en la facultad se excluyen así)
+        $conserjes = $this->facultadId
+            ? User::queryConserjes($user, $this->tipoConserje ?? 'uleam')
+                ->where('facultad_id', $this->facultadId)
+                ->orderBy('name')
+                ->get()
+            : collect();
+
+        return view('livewire.location-detail-table', compact(
+            'locations', 'facultades', 'tipoOptions', 'conserjes'
+        ));
     }
 }

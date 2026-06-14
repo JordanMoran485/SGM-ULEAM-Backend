@@ -20,20 +20,39 @@
 
         <div class="flex flex-col gap-1.5">
             <label class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                Tipo de conserje
+            </label>
+            <select
+                wire:model.live="tipoConserje"
+                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm shadow-sm focus:ring-primary-500 focus:border-primary-500"
+            >
+                <option value="">Seleccionar...</option>
+                @foreach ($tipoOptions as $value => $label)
+                    <option value="{{ $value }}">{{ $label }}</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-semibold {{ $facultadId ? 'text-gray-500 dark:text-gray-400' : 'text-gray-300 dark:text-gray-600' }} uppercase tracking-wide">
                 Conserje
             </label>
             <select
                 wire:model.live="conserjeId"
-                class="w-full rounded-lg border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white text-sm shadow-sm focus:ring-primary-500 focus:border-primary-500"
+                @if(!$facultadId) disabled @endif
+                class="w-full rounded-lg text-sm shadow-sm
+                    {{ $facultadId
+                        ? 'border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-white focus:ring-primary-500 focus:border-primary-500'
+                        : 'border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-60' }}"
             >
-                <option value="">Todos</option>
+                <option value="">{{ $facultadId ? 'Todos' : 'Selecciona una facultad primero' }}</option>
                 @foreach ($conserjes as $c)
                     <option value="{{ $c->id }}">{{ $c->getDisplayNameWithConserjeType() }}</option>
                 @endforeach
             </select>
         </div>
 
-        @if ($facultadId || $conserjeId)
+        @if ($facultadId || $tipoConserje || $conserjeId)
             <button
                 wire:click="resetFilters"
                 class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
