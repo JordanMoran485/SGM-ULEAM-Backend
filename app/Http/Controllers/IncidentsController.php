@@ -35,10 +35,12 @@ class IncidentsController extends Controller
             'priority' => 'nullable|in:Baja,Media,Alta,Low,Medium,High',
             'image'    => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
             'photo'    => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
+            'image2'   => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
         ]);
 
-        $imageFile = $request->file('image') ?? $request->file('photo');
-        $imagePath = $imageFile?->store('incidents', 'public');
+        $imageFile  = $request->file('image') ?? $request->file('photo');
+        $imagePath  = $imageFile?->store('incidents', 'public');
+        $image2Path = $request->file('image2')?->store('incidents', 'public');
 
         $incident = Incident::create([
             'title'       => $validatedData['title'],
@@ -48,6 +50,7 @@ class IncidentsController extends Controller
             'priority'    => $this->normalizePriority($validatedData['priority'] ?? null),
             'user_id'     => $request->user()->getKey(),
             'image'       => $imagePath,
+            'image2'      => $image2Path,
         ]);
 
         $incident->load([
@@ -84,7 +87,8 @@ class IncidentsController extends Controller
     {
         $data = $incident->toArray();
         $baseUrl = rtrim(request()->getSchemeAndHttpHost(), '/');
-        $data['image_url'] = $incident->image ? "{$baseUrl}/storage/{$incident->image}" : null;
+        $data['image_url']  = $incident->image  ? "{$baseUrl}/storage/{$incident->image}"  : null;
+        $data['image2_url'] = $incident->image2 ? "{$baseUrl}/storage/{$incident->image2}" : null;
 
         return $data;
     }

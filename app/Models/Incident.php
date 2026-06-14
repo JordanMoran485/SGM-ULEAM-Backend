@@ -14,6 +14,7 @@ class Incident extends Model
         'description',
         'user_id',
         'image',
+        'image2',
         'status',
         'review_status',
         'review_notes',
