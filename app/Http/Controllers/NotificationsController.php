@@ -41,4 +41,13 @@ class NotificationsController extends Controller
             'message' => 'Notificación actualizada.',
         ]);
     }
+
+    public function markAllAsRead(Request $request)
+    {
+        $request->user()->unreadNotifications()->update(['read_at' => now()]);
+
+        return response()->json([
+            'message' => 'Todas las notificaciones marcadas como leídas.',
+        ]);
+    }
 };

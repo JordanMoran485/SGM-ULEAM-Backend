@@ -29,6 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/incidents', [IncidentsController::class, 'index']);
     Route::post('/incidents', [IncidentsController::class, 'store']);
     Route::get('/notifications', [NotificationsController::class, 'index']);
+    Route::post('/notifications/read-all', [NotificationsController::class, 'markAllAsRead']);
     Route::post('/notifications/{notificationId}/read', [NotificationsController::class, 'markAsRead']);
     Route::post('/profile/image', [UserController::class, 'updateProfileImage']);
     Route::post('/push-token', [PushTokenController::class, 'store']);
