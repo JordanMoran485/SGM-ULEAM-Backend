@@ -320,6 +320,7 @@ class IncidentResource extends Resource
 
                         Notification::make()
                             ->title('Incidencia aprobada y conserje notificado')
+                            ->body($record->title)
                             ->success()
                             ->send();
                     }),
@@ -359,7 +360,8 @@ class IncidentResource extends Resource
 
                         Notification::make()
                             ->title('Incidencia rechazada')
-                            ->success()
+                            ->body($record->title)
+                            ->danger()
                             ->send();
                     }),
             ])

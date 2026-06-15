@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Incident;
+use App\Models\User;
+use Filament\Notifications\Notification as FilamentNotification;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 
@@ -59,10 +61,40 @@ class IncidentsController extends Controller
             'reviewer:id,name,lastname',
         ]);
 
+        $this->notifySupervisors($incident, $request->user());
+
         return response()->json([
             'message' => 'Incidencia creada correctamente.',
             'data' => $this->serializeIncident($incident),
         ], 201);
+    }
+
+    private function notifySupervisors(Incident $incident, User $reporter): void
+    {
+        if (! $reporter->facultad_id) {
+            return;
+        }
+
+        $supervisors = User::query()
+            ->role('supervisor')
+            ->where('facultad_id', $reporter->facultad_id)
+            ->where('active_state', true)
+            ->get();
+
+        if ($supervisors->isEmpty()) {
+            return;
+        }
+
+        $reporterName = trim(($reporter->name ?? '') . ' ' . ($reporter->lastname ?? ''));
+
+        $notification = FilamentNotification::make()
+            ->title('Nueva incidencia reportada')
+            ->body("{$reporterName}: \"{$incident->title}\" — {$incident->location}")
+            ->warning();
+
+        foreach ($supervisors as $supervisor) {
+            $supervisor->notifyNow($notification->toDatabase());
+        }
     }
 
     private function normalizeStatus(?string $status): string

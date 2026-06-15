@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Hash;
 
 
 
+
+
 class AuthController extends Controller
 {
 
@@ -44,7 +46,7 @@ class AuthController extends Controller
 
     return response()->json([
         'message' => 'Bienvenido, ' . $user->name,
-        'user' => $user,
+        'user' => $this->serializeUser($user),
         'token' => $token
     ], 200);
 }
@@ -78,7 +80,7 @@ class AuthController extends Controller
 
         return response([
             'message' => 'Usuario registrado exitosamente',
-            'user' => $user,
+            'user' => $this->serializeUser($user),
             'token' => $token
         ], 201);
     }
@@ -91,5 +93,32 @@ class AuthController extends Controller
     }
     return response()->json(['message' => 'No se encontró usuario'], 401);
 }
+
+    private function serializeUser(User $user): array
+    {
+        $data = $user->toArray();
+
+        $supervisor = null;
+        if ($user->hasRole('conserje') && $user->facultad_id) {
+            $sup = User::query()
+                ->role('supervisor')
+                ->where('facultad_id', $user->facultad_id)
+                ->where('active_state', true)
+                ->select(['id', 'name', 'lastname'])
+                ->first();
+
+            if ($sup) {
+                $supervisor = [
+                    'id'       => $sup->id,
+                    'name'     => $sup->name,
+                    'lastname' => $sup->lastname,
+                ];
+            }
+        }
+
+        $data['supervisor'] = $supervisor;
+
+        return $data;
+    }
 }
  

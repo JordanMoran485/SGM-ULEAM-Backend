@@ -57,6 +57,14 @@ class FacultadResource extends Resource
                     ->label('Nombre')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('supervisor.name')
+                    ->label('Supervisor')
+                    ->formatStateUsing(fn ($state, Facultad $record): string =>
+                        $record->supervisor
+                            ? trim(($record->supervisor->name ?? '') . ' ' . ($record->supervisor->lastname ?? ''))
+                            : '-'
+                    )
+                    ->placeholder('-'),
                 TextColumn::make('display_name')
                     ->label('Identificador')
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -65,6 +73,11 @@ class FacultadResource extends Resource
                 EditAction::make(),
                 DeleteAction::make(),
             ]);
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()->with('supervisor');
     }
 
     public static function getPages(): array

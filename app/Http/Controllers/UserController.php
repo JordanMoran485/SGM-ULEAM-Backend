@@ -73,9 +73,25 @@ class UserController extends Controller
         $user->save();
         $user->refresh()->load(['facultad', 'roles']);
 
+        $supervisor = null;
+        if ($user->hasRole('conserje') && $user->facultad_id) {
+            $sup = User::query()
+                ->role('supervisor')
+                ->where('facultad_id', $user->facultad_id)
+                ->where('active_state', true)
+                ->select(['id', 'name', 'lastname'])
+                ->first();
+
+            if ($sup) {
+                $supervisor = ['id' => $sup->id, 'name' => $sup->name, 'lastname' => $sup->lastname];
+            }
+        }
+
+        $userData = array_merge($user->toArray(), ['supervisor' => $supervisor]);
+
         return response()->json([
             'message' => 'Imagen actualizada',
-            'user' => $user,
+            'user' => $userData,
             'url' => $user->profile_photo_url,
         ]);
     }

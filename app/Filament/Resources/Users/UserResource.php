@@ -120,7 +120,7 @@ class UserResource extends Resource
                     ->live()
                     ->label('Rol de Usuario')
                     ->required()
-                    ->rule(function (callable $get, ?User $record) {
+                    ->rule(function (Get $get, ?User $record) {
                         return function (string $attribute, mixed $value, Closure $fail) use ($get, $record): void {
                             $roleId = is_array($value) ? reset($value) : $value;
                             $roleName = Role::query()->find($roleId)?->name;

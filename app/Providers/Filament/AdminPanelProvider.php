@@ -34,6 +34,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('SGM - Uleam')
             ->globalSearch(false)
             ->databaseNotifications()
+            ->databaseNotificationsPolling('30s')
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->colors([
                 'primary' => Color::Blue,

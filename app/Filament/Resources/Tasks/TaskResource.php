@@ -12,6 +12,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Notifications\Notification;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
@@ -369,12 +370,24 @@ class TaskResource extends Resource
             ])
             ->recordActions([
                 ViewAction::make(),
-                EditAction::make(),
-                DeleteAction::make(),
+                EditAction::make()
+                    ->after(function (Task $record): void {
+                        $n = Notification::make()->success()->title('Tarea actualizada')->body($record->title);
+                        auth()->user()->notifyNow($n->toDatabase());
+                    }),
+                DeleteAction::make()
+                    ->after(function (Task $record): void {
+                        $n = Notification::make()->danger()->title('Tarea eliminada')->body($record->title);
+                        auth()->user()->notifyNow($n->toDatabase());
+                    }),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->after(function (): void {
+                            $n = Notification::make()->danger()->title('Tareas eliminadas');
+                            auth()->user()->notifyNow($n->toDatabase());
+                        }),
                 ]),
             ]);
     }

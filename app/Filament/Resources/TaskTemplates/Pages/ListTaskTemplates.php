@@ -65,11 +65,12 @@ class ListTaskTemplates extends ListRecords
                         ->get();
 
                     if ($templates->isEmpty()) {
-                        Notification::make()
+                        $notification = Notification::make()
                             ->title('Sin plantillas')
                             ->body('Los conserjes seleccionados no tienen plantillas configuradas.')
-                            ->warning()
-                            ->send();
+                            ->warning();
+                        auth()->user()->notifyNow($notification->toDatabase());
+                        $notification->send();
 
                         return;
                     }
@@ -168,11 +169,12 @@ class ListTaskTemplates extends ListRecords
                             . ' por ya existir.';
                     }
 
-                    Notification::make()
+                    $notification = Notification::make()
                         ->title('Semana generada')
                         ->body($body)
-                        ->success()
-                        ->send();
+                        ->success();
+                    auth()->user()->notifyNow($notification->toDatabase());
+                    $notification->send();
                 }),
 
             Action::make('revertWeek')
@@ -228,20 +230,22 @@ class ListTaskTemplates extends ListRecords
                     $weekLabel = $weekStart->format('d/m/Y') . ' – ' . $weekEnd->format('d/m/Y');
 
                     if ($deleted === 0) {
-                        Notification::make()
+                        $notification = Notification::make()
                             ->title('Nada que revertir')
                             ->body("No se encontraron tareas generadas desde plantilla para la semana del {$weekLabel}.")
-                            ->warning()
-                            ->send();
+                            ->warning();
+                        auth()->user()->notifyNow($notification->toDatabase());
+                        $notification->send();
 
                         return;
                     }
 
-                    Notification::make()
+                    $notification = Notification::make()
                         ->title('Semana revertida')
                         ->body("Se eliminaron {$deleted} " . ($deleted === 1 ? 'tarea' : 'tareas') . " de la semana del {$weekLabel}.")
-                        ->success()
-                        ->send();
+                        ->success();
+                    auth()->user()->notifyNow($notification->toDatabase());
+                    $notification->send();
                 }),
 
             CreateAction::make()
