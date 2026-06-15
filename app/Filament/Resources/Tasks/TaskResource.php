@@ -6,6 +6,7 @@ use App\Filament\Resources\Tasks\Pages\ManageTasks;
 use App\Models\Task;
 use App\Models\User;
 use BackedEnum;
+use Carbon\Carbon;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -16,6 +17,7 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Infolists\Components\TextEntry;
@@ -27,6 +29,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class TaskResource extends Resource
 {
@@ -85,15 +88,62 @@ class TaskResource extends Resource
                 TextInput::make('location')
                     ->label('Ubicacion')
                     ->maxLength(255),
+                Toggle::make('all_day')
+                    ->label('Todo el día')
+                    ->default(false)
+                    ->live()
+                    ->afterStateUpdated(fn (Set $set) => $set('end_at', null)),
                 DateTimePicker::make('start_at')
                     ->label('Inicio')
                     ->native(false)
                     ->seconds(false)
-                    ->required(),
+                    ->hidden(fn (Get $get): bool => (bool) $get('all_day'))
+                    ->required(fn (Get $get): bool => ! (bool) $get('all_day'))
+                    ->rule(fn (Get $get, ?Model $record): \Closure =>
+                        function (string $attribute, mixed $value, \Closure $fail) use ($get, $record): void {
+                            $userId = $get('user_id');
+                            if (! $value || ! $userId || (bool) $get('all_day')) {
+                                return;
+                            }
+
+                            $startAt    = Carbon::parse($value);
+                            $endRaw     = $get('end_at');
+                            $checkEndAt = ($endRaw && ! Carbon::parse($endRaw)->equalTo($startAt))
+                                ? Carbon::parse($endRaw)
+                                : $startAt->copy()->addHour();
+
+                            $overlap = Task::query()
+                                ->where('user_id', $userId)
+                                ->where('all_day', false)
+                                ->when($record?->getKey(), fn (Builder $q) => $q->where('id', '!=', $record->getKey()))
+                                ->whereDate('start_at', $startAt->toDateString())
+                                ->where('status', '!=', 'Completada')
+                                ->get(['id', 'start_at', 'end_at'])
+                                ->contains(function (Task $existing) use ($startAt, $checkEndAt): bool {
+                                    $exStart = Carbon::parse($existing->start_at);
+
+                                    if ($startAt->equalTo($exStart)) {
+                                        return true;
+                                    }
+
+                                    $exEnd = Carbon::parse($existing->end_at ?? $exStart);
+                                    if ($exEnd->equalTo($exStart)) {
+                                        $exEnd = $exStart->copy()->addHour();
+                                    }
+
+                                    return $startAt->lt($exEnd) && $checkEndAt->gt($exStart);
+                                });
+
+                            if ($overlap) {
+                                $fail('El conserje ya tiene una tarea asignada en ese horario.');
+                            }
+                        }
+                    ),
                 DateTimePicker::make('end_at')
                     ->label('Fin')
                     ->native(false)
-                    ->seconds(false),
+                    ->seconds(false)
+                    ->hidden(fn (Get $get): bool => (bool) $get('all_day')),
             ]);
     }
 

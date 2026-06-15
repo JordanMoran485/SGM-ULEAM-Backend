@@ -86,17 +86,6 @@ class ListTaskTemplates extends ListRecords
                         foreach ($template->taskTemplateItems as $item) {
                             $taskDate = $weekStart->copy()->addDays($item->day_of_week - 1);
 
-                            $alreadyExists = Task::query()
-                                ->where('user_id', $template->user_id)
-                                ->where('title', $item->title)
-                                ->whereDate('start_at', $taskDate->toDateString())
-                                ->exists();
-
-                            if ($alreadyExists) {
-                                $skipped++;
-                                continue;
-                            }
-
                             $startAt = $item->all_day
                                 ? $taskDate->copy()->startOfDay()
                                 : $taskDate->copy()->setTimeFromTimeString($item->start_time ?? '08:00');
@@ -104,6 +93,44 @@ class ListTaskTemplates extends ListRecords
                             $endAt = (! $item->all_day && $item->end_time)
                                 ? $taskDate->copy()->setTimeFromTimeString($item->end_time)
                                 : null;
+
+                            // End time used only for overlap calculation (never null)
+                            $checkEndAt = $item->all_day
+                                ? $taskDate->copy()->endOfDay()
+                                : ($item->end_time
+                                    ? $taskDate->copy()->setTimeFromTimeString($item->end_time)
+                                    : $startAt->copy()->addHour());
+
+                            $dayTasks = Task::query()
+                                ->where('user_id', $template->user_id)
+                                ->whereDate('start_at', $taskDate->toDateString())
+                                ->where('status', '!=', 'Completada')
+                                ->get(['start_at', 'end_at', 'all_day']);
+
+                            $hasOverlap = $dayTasks->contains(function (Task $existing) use ($startAt, $checkEndAt): bool {
+                                $exStart = Carbon::parse($existing->start_at);
+
+                                // Same start time always conflicts
+                                if ($startAt->equalTo($exStart)) {
+                                    return true;
+                                }
+
+                                $exEnd = $existing->end_at
+                                    ? Carbon::parse($existing->end_at)
+                                    : $exStart->copy()->addHour();
+
+                                // Model saves end_at = start_at when no end_time; treat as 1 hour
+                                if ($exEnd->equalTo($exStart)) {
+                                    $exEnd = $exStart->copy()->addHour();
+                                }
+
+                                return $startAt->lt($exEnd) && $checkEndAt->gt($exStart);
+                            });
+
+                            if ($hasOverlap) {
+                                $skipped++;
+                                continue;
+                            }
 
                             $task = Task::create([
                                 'user_id'          => $template->user_id,
