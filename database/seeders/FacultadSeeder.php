@@ -11,7 +11,7 @@ class FacultadSeeder extends Seeder
     {
         $facultades = [
             ['code' => 'B-16', 'name' => 'Ciencias de la Vida'],
-            ['code' => 'A-01', 'name' => 'Facultad de ejemplo'],
+            ['code' => 'A-01', 'name' => 'Facultad de Tecnologia de la informacion'],
         ];
 
         foreach ($facultades as $facultad) {

@@ -22,6 +22,7 @@ return new class extends Migration
             $table->rememberToken();
             
             $table->boolean('active_state')->default(true)->nullable();
+            $table->string('tipo_conserje', 20)->nullable();
             $table->timestamps();
         });
 
