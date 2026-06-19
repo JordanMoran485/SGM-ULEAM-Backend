@@ -20,7 +20,12 @@ return new class extends Migration
         $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
         $table->string('location')->nullable();
         $table->date('due_date')->nullable();
+        $table->dateTime('start_at')->nullable();
+        $table->dateTime('end_at')->nullable();
+        $table->boolean('all_day')->default(true);
         $table->timestamps();
+        $table->index('start_at');
+        $table->index(['user_id', 'start_at']);
     });
 }
 

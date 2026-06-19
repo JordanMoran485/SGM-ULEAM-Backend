@@ -14,10 +14,15 @@ return new class extends Migration
             $table->string('title');
             $table->text('description');
             $table->enum('status', ['Pendiente', 'En Proceso', 'Completada'])->default('Pendiente');
+            $table->enum('review_status', ['Pendiente de revision', 'Aceptada', 'Rechazada'])->default('Pendiente de revision');
+            $table->text('review_notes')->nullable();
+            $table->timestamp('reviewed_at')->nullable();
+            $table->foreignId('reviewed_by')->nullable()->constrained('users')->nullOnDelete();
             $table->enum('priority', ['Baja', 'Media', 'Alta'])->default('Media');
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->string('location');
             $table->string('image')->nullable();
+            $table->string('image2')->nullable();
             $table->timestamps();
         });
 
